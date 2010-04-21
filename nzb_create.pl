@@ -1,0 +1,293 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings FATAL => 'all';
+
+use Date::Format;
+use Date::Parse;
+use File::Basename;
+use File::Path;
+use WWW::Mechanize;
+use XML::DOM;
+
+my $AGE      = 50;
+my $NZB_HOME = '/tmp/nzbdata';
+my $RAR_BIN  = 'unrar';
+
+my $END      = str2time(time2str("%Y-%m-%d", time()));
+my $START    = $END - ($AGE * 86400);
+
+my $WWW      = WWW::Mechanize->new();
+$WWW->agent_alias('Windows IE 6');
+$WWW->default_header('Accept-Encoding' => 'deflate,gzip');
+
+sub checkNZB #{{{1
+{
+	my ($nzb, %blacklist) = @_;
+
+	# nzb from blacklisted poster
+	if (defined $blacklist{$nzb->{poster}}) {
+		return 0;
+	}
+
+	#  password and rar in rar
+	my $rar = getFirstRAR($nzb);
+	if ((! defined $rar) || (! -r $rar)) {
+		# no rar to check => fail
+		return 0;
+	}
+
+	# lt  : technical filelist
+	# lb  : list bare file names
+	# -p- : don't ask for password
+	my @bare_files = `$RAR_BIN lb -p- $rar 2> /dev/null`;
+	my @technical  = `$RAR_BIN lt -p- $rar 2> /dev/null`;
+	# unlink($rar); FIXME uncomment if getFirstRAR works
+
+	# empty rar or encrypted headers
+	if (scalar @bare_files == 0) {
+		return 0;
+	}
+
+	# check for encrypted data
+	for my $line (@technical) {
+		if ($line =~ m/^\*/) {
+			return 0;
+		}
+	}
+
+	# check for rar-in-rar
+	for my $file (@bare_files) {
+		if ($file =~ m/\.rar$/) {
+			return 0;
+		}
+	}
+
+	print "good nzb\n";
+	return 1;
+}#}}}1 
+sub determineFirstRAR #{{{1
+{
+	my (@files) = @_;
+
+	my @rars;
+	for my $file (@files) {
+		if ($file->{subject} =~ m/\.rar/) {
+			push(@rars, $file);
+		}
+	}
+
+	if ((scalar @rars) > 1) {
+		sub rar_sort #{{{2
+		{
+			$a->{subject} =~ m/(\d+)\.rar/;
+			my $part_a = $1;
+
+			$b->{subject} =~ m/(\d+)\.rar/;
+			my $part_b = $1;
+
+			return $part_a cmp $part_b;
+		} #}}}2
+
+		@rars = sort rar_sort @rars;
+	}
+
+	my $first = undef;
+	if ((scalar @rars) >= 1) {
+		$first = $rars[0];
+	}
+
+	return $first;
+} #}}}1
+sub downloadNZB #{{{1
+{
+	my ($nzb, $file) = @_;
+	my $url = 'http://binsearch.info/fcgi/nzb.fcgi';
+
+	my $data = $WWW->post( $url, { $nzb->{id} => 'on', action => 'nzb' } );
+	if ($WWW->success) {
+		open (FH, ">$file");
+		print FH $data;
+		close (FH);
+	} else {
+		print STDERR "Can't retrieve $url: $!";
+	}
+} #}}}1
+sub getFirstRAR #{{{1
+{
+	my ($nzb) = @_;
+	my $tmp = 'tmp.nzb';
+	downloadNZB($nzb, $tmp);
+
+	my @files = parseNZB($tmp);
+	unlink($tmp);
+
+	my $first = determineFirstRAR(@fileset);
+	if (defined $first) {
+		# TODO realy retrieve articles of first file and compose them
+		return '/home.stand/faui22a/dreweke/download/rar/t.rar';
+	}
+} #}}}1
+sub NZBFileName #{{{1
+{
+	my ($serie, $episode) = @_;
+
+	my $file = $NZB_HOME . '/' . $serie->{id} . '/' . $serie->{id} . '_' . $episode;
+	if ($serie->{hd}) {
+		return $file . '-HD.nzb';
+	}
+	return $file . '.nzb';
+} #}}}1
+sub parseNZB #{{{1
+{
+	my ($nzbfile) = @_;
+	my $parser = new XML::DOM::Parser;
+	my @fileset;
+	my $nzbdoc = $parser->parsefile($nzbfile);
+
+	my @files;
+	for my $fileNode ($nzbdoc->getElementsByTagName("file")) {
+		my $subject = $fileNode->getAttributes()->getNamedItem('subject')->getValue();
+		my $date    = $fileNode->getAttributes()->getNamedItem('date')->getValue();
+
+		my @groups;
+		for my $groupNode ($fileNode->getElementsByTagName('group')) {
+			push(@groups, $groupNode->getFirstChild()->getNodeValue());
+		}
+
+		my @segments;
+		for my $segment ($fileNode->getElementsByTagName('segment')) {
+			my $number = $segment->getAttributes()->getNamedItem('number')->getValue();
+			my $id     = $segment->getFirstChild()->getNodeValue();
+
+			push(@segments, { id => $id, number => $number });
+		}
+
+		# sort segments by number (if available)
+		if (defined($segments[0]) && defined($segments[0]->{'number'})){
+			@segments = sort { $a->{'number'} <=> $b->{'number'} } @segments;
+		}
+
+		push(@files, { subject => $subject, date => $date, groups => \@groups , segments => \@segments });
+	}
+	$nzbdoc->dispose;
+
+	# sort files by subject
+	return sort { $a->{'subject'} cmp $b->{'subject'}; } @files;
+}#}}}1
+sub searchNZB #{{{1
+{
+	my ($serie, $episode) = @_;
+	my @nzbs;
+
+	my $url = 'http://binsearch.info/index.php?adv_sort=date&adv_col=on' . 
+	          '&m=&max=25&adv_g=' . $serie->{group} . 
+	          '&adv_age=' . $AGE . 
+	          '&minsize=' . $serie->{min} . 
+	          '&maxsize=' . $serie->{max} .
+	          '&q=' . $serie->{query} . '+' . $episode . '+HDTV';
+
+	if ($serie->{hd}) {
+		$url .= '+x264';
+	} else {
+		$url .= '+xvid';
+	}
+
+	my $page = $WWW->get($url);
+	if ($WWW->success) {
+		my $data = $page->decoded_content;
+		while ( $data =~ s/(name=\"\d{8,}\".*?)<input\ //xmsi ) {
+			my $line = $1;
+			while (
+				$line =~ s/
+				\"(\d{8,})\".*?                          # id
+				\<span\ class=\"s\"\>([^<]+).*?          # subject
+				\>\ size:\ ([^,]*)                       # size
+				,\ parts\ available:.*? (\d+)\ \/\ (\d+) # parts_available parts_complete
+				.*>([^<]+)<\/a><td><a                    # poster
+				//mxi
+			)
+			{
+				my $parts_available = $4;
+				my $parts_complete  = $5;
+				if ($4 == $5) {
+					my $nzb = { id => $1, subject => $2, size => $3, poster => $6 };
+					push (@nzbs, $nzb);
+				}
+			}
+		}
+	} else {
+		print  "Can't retrieve $url: $!";
+	}
+
+	return @nzbs;
+} #}}}1
+
+# list of posters, we don't want nzbs from {{{1
+my @blacklist =
+(
+	'ficken',
+);
+my %bp = map { $_ => 1 } @blacklist;
+#}}}1
+
+# id    = folder name on http://epguides.com/
+# query = series names to search for on http://binsearch.info/
+# group = newsgroup to search for posts
+# min   = minimal size of nzb collection
+# max   = maximal size of nzb collection
+# hd    = search for x264 or xvid content
+my @series = #{{{1
+(
+  { id => '24',                   query => '24',                       group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
+  { id => '24',                   query => '24',                       group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
+  { id => 'CSI',                  query => 'CSI',                      group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
+  { id => 'CSI',                  query => 'CSI',                      group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
+  { id => 'CSIMiami',             query => 'CSI.Miami',                group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
+  { id => 'CSIMiami',             query => 'CSI.Miami',                group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
+  { id => 'CSINY',                query => 'CSI.New.York',             group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
+  { id => 'CSINY',                query => 'CSI.New.York',             group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
+  { id => 'NCIS',                 query => 'NCIS',                     group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
+  { id => 'NCIS',                 query => 'NCIS',                     group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
+  { id => 'StarWarsTheCloneWars', query => 'Star.Wars.The.Clone.Wars', group => 'alt.binaries.multimedia', min =>  200, max =>  300, hd => 0 },
+  { id => 'StarWarsTheCloneWars', query => 'Star.Wars.The.Clone.Wars', group => 'alt.binaries.multimedia', min =>  500, max =>  800, hd => 1 },
+  { id => 'StargateUniverse',     query => 'Stargate.Universe',        group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
+  { id => 'StargateUniverse',     query => 'Stargate.Universe',        group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
+); #}}}1
+
+for my $serie (@series) {
+	my $url = 'http://epguides.com/' . $serie->{id} . '/';
+	$WWW->get($url);
+	
+	if (! $WWW->success) {
+		print  "Can't retrieve $url: $!";
+		next;
+	}
+
+	for (split("\n", $WWW->content())) {
+		if (/\s+(\d{1,2})-(\d{1,2})\s+(?:\S+\s+){0,1}(\d{2}.\w{3}.\d{2})/) {
+			my $season   = $1;
+			my $episode  = $2;
+			my $released = $3;
+			$released =~ s# #/#g;
+			$released = str2time($released);
+
+			if (($START <= $released) && ($released <= $END)) {
+				my $episodeID = sprintf("S%02dE%02d", $season, $episode);
+				my @nzbs = searchNZB($serie, $episodeID);
+
+				my $file = NZBFileName($serie, $episodeID);
+
+				mkpath(dirname($file));
+				if (! -e $file) {
+					for my $nzb (@nzbs) {
+						if (1 or checkNZB($nzb, %bp)) { # FIXME 
+							downloadNZB($nzb, $file);
+							last;
+						}
+					}
+				}
+			}
+		}
+	}
+}
