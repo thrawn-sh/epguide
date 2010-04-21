@@ -3,6 +3,8 @@
 use strict;
 use warnings FATAL => 'all';
 
+use lib '../lib';
+
 use Date::Format;
 use Date::Parse;
 use File::Basename;
