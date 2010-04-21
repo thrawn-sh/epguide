@@ -122,7 +122,7 @@ sub getFirstRAR #{{{1
 	my @files = parseNZB($tmp);
 	unlink($tmp);
 
-	my $first = determineFirstRAR(@fileset);
+	my $first = determineFirstRAR(@files);
 	if (defined $first) {
 		# TODO realy retrieve articles of first file and compose them
 		return '/home.stand/faui22a/dreweke/download/rar/t.rar';
