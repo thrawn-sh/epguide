@@ -142,6 +142,22 @@ sub getFirstRAR #{{{1
 			$size += $section->{size};
 		}
 
+		my $pid = fork();
+		if (not defined $pid) {
+			print STDERR "can't fork\n";
+		} elsif ($pid == 0) {
+			# run nzb for $firstNZB
+			# `$NZB_BIN $firstNZB`; # TODO path for $firstNZB
+			exit 0;
+		} else {
+			# give the child time to download the nzb (factor 2 is
+			# grace)
+			sleep (($size / $NET_SPEED) * 2);
+
+			kill(-9, $pid);
+			waitpid($pid, 0);
+		}
+
 		$first->{subject} =~ m/"(.+)"/; # FIXME pattern to nzb way
 		if ((defined $1) && ( -e $1)) {
 			return IO::File->new($1);
