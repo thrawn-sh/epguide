@@ -9,19 +9,19 @@ use Date::Format;
 use Date::Parse;
 use File::Basename;
 use File::Path;
+use File::Spec;
 use File::Temp;
-use IO::File;
 use WWW::Mechanize;
 use XML::DOM;
 
 File::Temp->safe_level(File::Temp::HIGH);
 
 my $AGE       = 50;
-my $NET_SPEED = 1000; # networkspeed (byte per second)
+my $NET_SPEED = 1000*1000; # download speed (byte per second)
 my $NZB_BIN   = '';
 my $NZB_DIR   = '/tmp/nzbdata';
 my $RAR_BIN   = 'unrar';
-my $TMP_DIR   = File::Temp->newdir('/tmp/nzbXXXXX', UNLINK => 1);
+my $TMP_DIR   = File::Temp->newdir(File::Spec->tmpdir() . '/nzbXXXXX', UNLINK => 1);
 
 my $END      = str2time(time2str("%Y-%m-%d", time()));
 my $START    = $END - ($AGE * 86400);
@@ -51,7 +51,7 @@ sub checkNZB #{{{1
 	# -p- : don't ask for password
 	my @bare_files = `$RAR_BIN lb -p- $rar 2> /dev/null`;
 	my @technical  = `$RAR_BIN lt -p- $rar 2> /dev/null`;
-	# unlink($rar); FIXME uncomment if getFirstRAR works
+	unlink($rar);
 
 	# empty rar or encrypted headers
 	if (scalar @bare_files == 0) {
@@ -146,8 +146,11 @@ sub getFirstRAR #{{{1
 		if (not defined $pid) {
 			print STDERR "can't fork\n";
 		} elsif ($pid == 0) {
+			my $absFile = File::Spec->rel2abs($firstNZB);
+
 			# run nzb for $firstNZB
-			# `$NZB_BIN $firstNZB`; # TODO path for $firstNZB
+			chdir $TMP_DIR;
+			`$NZB_BIN $absFile`;
 			exit 0;
 		} else {
 			# give the child time to download the nzb (factor 2 is
@@ -155,12 +158,17 @@ sub getFirstRAR #{{{1
 			sleep (($size / $NET_SPEED) * 2);
 
 			kill(-9, $pid);
-			waitpid($pid, 0);
+			waitpid($pid, 0); 
+
+			if ($? != 0) {
+				print STDERR "nzb download not complete\n";
+				return;
+			}
 		}
 
 		$first->{subject} =~ m/"(.+)"/; # FIXME pattern to nzb way
 		if ((defined $1) && ( -e $1)) {
-			return IO::File->new($1);
+			return File::Spec->rel2abs($TMP_DIR . '/' . $1); 
 		}
 	}
 } #}}}1
@@ -340,19 +348,16 @@ for my $serie (@series) {
 				my $episodeID = sprintf("S%02dE%02d", $season, $episode);
 				my @nzbs = searchNZB($serie, $episodeID);
 
-				my $file = undef;
-				{
-					my $name = $NZB_DIR . '/' . $serie->{id} . '/' . $serie->{id} . '_' . $episode;
-					if ($serie->{hd}) {
-						$name .= '-HD';
-					}
-					$file = IO::File($name . '.nzb');
+				my $file = $NZB_DIR . '/' . $serie->{id} . '/' . $serie->{id} . '_' . $episodeID;
+				if ($serie->{hd}) {
+					$file .= '-HD';
 				}
+				$file .= '.nzb';
 
 				mkpath(dirname($file));
 				if (! -e $file) {
 					for my $nzb (@nzbs) {
-						if (1 or checkNZB($nzb, %bp)) { # FIXME 
+						if (checkNZB($nzb, %bp)) {
 							downloadNZB($nzb, $file);
 							last;
 						}
