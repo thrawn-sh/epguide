@@ -12,6 +12,7 @@ sub parseNZB #{{{1
 	my ($self, $nzbfile) = @_;
 	my $parser = new XML::DOM::Parser;
 	my @fileset;
+
 	my $nzbdoc = $parser->parsefile($nzbfile);
 
 	my @files;

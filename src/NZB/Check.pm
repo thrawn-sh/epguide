@@ -12,8 +12,8 @@ use NZB::Common;
 
 File::Temp->safe_level(File::Temp::HIGH);
 
-my $NET_SPEED = 1000*1000; # download speed (byte per second)
-my $NZB_BIN   = 'nzb';
+my $NET_SPEED = 20*1000*1000; # download speed (byte per second)
+my $NZB_BIN   = './nzb';
 my $RAR_BIN   = 'unrar';
 my $TMP_DIR   = File::Temp->newdir(File::Spec->tmpdir() . '/nzb_XXXXX', UNLINK => 1);
 
@@ -103,7 +103,6 @@ sub getFirstRAR #{{{1
 	NZB::Binsearch->downloadNZB($nzb, $tmp);
 
 	my @files = NZB::Common->parseNZB($tmp);
-	unlink($tmp);
 
 	my $first = $self->determineFirstRAR(@files);
 	if (defined $first) {
@@ -111,14 +110,14 @@ sub getFirstRAR #{{{1
 		NZB::Common->writeNZB($first, $firstNZB);
 
 		my $size = 0;
-		my $sections = $firstNZB->{sections};
-		for my $section (@$sections) {
-			$size += $section->{size};
+		my $segments = $first->{'segments'};
+		for my $segment (@$segments) {
+			$size += $segment->{'size'};
 		}
 
 		my $firstRAR = undef;
-		$first->{subject} =~ m/"(.+)"/; 
-		if ((defined $1) && ( -e $1)) {
+		$first->{'subject'} =~ m/\"(.+)\"/; 
+		if (defined $1) {
 			$firstRAR = File::Spec->rel2abs($TMP_DIR . '/' . $1);
 		} 
 
@@ -129,16 +128,16 @@ sub getFirstRAR #{{{1
 			my $absFile = File::Spec->rel2abs($firstNZB);
 
 			# run nzb for $firstNZB
-			chdir $TMP_DIR;
+#			chdir $TMP_DIR; FIXME
 			`$NZB_BIN $absFile`;
 			exit 0;
 		} else {
 			# give the child time to download the nzb (factor 2 is
 			# grace)
-			sleep (($size / $NET_SPEED) * 2);
+			sleep (int (($size / $NET_SPEED) * 2 + 0)); # FIXME
 
 			kill(-9, $pid);
-			waitpid($pid, 0); 
+			waitpid($pid, 1);
 
 			if ($? != 0) {
 				print STDERR "nzb download not complete\n";
