@@ -149,8 +149,9 @@ sub parseNZB #{{{1
 
 	my @files;
 	for my $fileNode ($nzbdoc->getElementsByTagName("file")) {
-		my $subject = $fileNode->getAttributes()->getNamedItem('subject')->getValue();
 		my $date    = $fileNode->getAttributes()->getNamedItem('date')->getValue();
+		my $poster  = $fileNode->getAttributes()->getNamedItem('poster')->getValue();
+		my $subject = $fileNode->getAttributes()->getNamedItem('subject')->getValue();
 
 		my @groups;
 		for my $groupNode ($fileNode->getElementsByTagName('group')) {
@@ -159,10 +160,11 @@ sub parseNZB #{{{1
 
 		my @segments;
 		for my $segment ($fileNode->getElementsByTagName('segment')) {
-			my $number = $segment->getAttributes()->getNamedItem('number')->getValue();
 			my $id     = $segment->getFirstChild()->getNodeValue();
+			my $number = $segment->getAttributes()->getNamedItem('number')->getValue();
+			my $size   = $segment->getAttributes()->getNamedItem('bytes')->getValue();
 
-			push(@segments, { id => $id, number => $number });
+			push(@segments, { id => $id, number => $number, size => $size });
 		}
 
 		# sort segments by number (if available)
@@ -170,7 +172,7 @@ sub parseNZB #{{{1
 			@segments = sort { $a->{'number'} <=> $b->{'number'} } @segments;
 		}
 
-		push(@files, { subject => $subject, date => $date, groups => \@groups , segments => \@segments });
+		push(@files, { date => $date, poster => $poster, subject => $subject, groups => \@groups , segments => \@segments });
 	}
 	$nzbdoc->dispose;
 
@@ -223,6 +225,42 @@ sub searchNZB #{{{1
 	}
 
 	return @nzbs;
+} #}}}1
+sub writeNZB #{{{1
+{
+	my ($nzbFile, $output) = @_;
+
+	my $xml = XML::DOM::Document->new;
+	my $nzbElement  = $xml->createElement('nzb');
+	my $fileElement = $xml->createElement('file');
+	$fileElement->setAttribute('date',    $nzbFile->{date});
+	$fileElement->setAttribute('poster',  $nzbFile->{poster});
+	$fileElement->setAttribute('subject', $nzbFile->{subject});
+
+	my $groupsElement = $xml->createElement('groups');
+	my $groups = $nzbFile->{groups};
+	for my $group (@$groups) {
+		my $groupElement = $xml->createElement('group');
+		$groupElement->appendChild($xml->createTextNode($group));
+		$groupsElement->appendChild($groupElement);
+	}
+	$fileElement->appendChild($groupsElement);
+
+	my $segmentsElement = $xml->createElement('segments');
+	my $segments = $nzbFile->{segments};
+	for my $segment (@$segments) {
+		my $segmentElement = $xml->createElement('segment');
+		$segmentElement->setAttribute('bytes',  $segment->{size});
+		$segmentElement->setAttribute('number', $segment->{number});
+		$segmentElement->appendChild($xml->createTextNode($segment->{id}));
+		$segmentsElement->appendChild($segmentElement);
+	}
+	$fileElement->appendChild($segmentsElement);
+	$nzbElement->appendChild($fileElement);
+
+	open (FH, ">$output");
+	print FH $nzbElement->toString;
+	close (FH);
 } #}}}1
 
 # list of posters, we don't want nzbs from {{{1
