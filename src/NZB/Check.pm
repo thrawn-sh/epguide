@@ -12,8 +12,8 @@ use NZB::Common;
 
 File::Temp->safe_level(File::Temp::HIGH);
 
-my $NET_SPEED = 20*1000*1000; # download speed (byte per second)
-my $NZB_BIN   = './nzb';
+my $NET_SPEED = 100*1000; # download speed (byte per second)
+my $NZB_BIN   = '~sithglan/nzb';
 my $RAR_BIN   = 'unrar';
 my $TMP_DIR   = File::Temp->newdir(File::Spec->tmpdir() . '/nzb_XXXXX', UNLINK => 1);
 
@@ -128,13 +128,24 @@ sub getFirstRAR #{{{1
 			my $absFile = File::Spec->rel2abs($firstNZB);
 
 			# run nzb for $firstNZB
-#			chdir $TMP_DIR; FIXME
-			`$NZB_BIN $absFile`;
+			chdir $TMP_DIR;
+			`$NZB_BIN $absFile > /dev/null 2> /dev/null`;
 			exit 0;
 		} else {
 			# give the child time to download the nzb (factor 2 is
 			# grace)
-			sleep (int (($size / $NET_SPEED) * 2 + 0)); # FIXME
+			my $sleepTime = (int (($size / $NET_SPEED) * 2 + 5));
+			my $smallSleep = 5;
+			while ($sleepTime > 0) {
+				print $sleepTime . "\n";
+				sleep($smallSleep);
+
+				if (-e $firstRAR) {
+					last;
+				}
+
+				$sleepTime -= $smallSleep;
+			}
 
 			kill(-9, $pid);
 			waitpid($pid, 1);
