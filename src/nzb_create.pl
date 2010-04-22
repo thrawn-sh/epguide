@@ -21,7 +21,7 @@ my $NET_SPEED = 1000; # networkspeed (byte per second)
 my $NZB_BIN   = '';
 my $NZB_DIR   = '/tmp/nzbdata';
 my $RAR_BIN   = 'unrar';
-my $TMP_DIR   = File::Temp->newdir('nzbXXXXX');
+my $TMP_DIR   = File::Temp->newdir('/tmp/nzbXXXXX', UNLINK => 1);
 
 my $END      = str2time(time2str("%Y-%m-%d", time()));
 my $START    = $END - ($AGE * 86400);
