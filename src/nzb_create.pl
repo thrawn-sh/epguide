@@ -9,12 +9,19 @@ use Date::Format;
 use Date::Parse;
 use File::Basename;
 use File::Path;
+use File::Temp;
+use IO::File;
 use WWW::Mechanize;
 use XML::DOM;
 
-my $AGE      = 50;
-my $NZB_HOME = '/tmp/nzbdata';
-my $RAR_BIN  = 'unrar';
+File::Temp->safe_level(File::Temp::HIGH);
+
+my $AGE       = 50;
+my $NET_SPEED = 1000; # networkspeed (byte per second)
+my $NZB_BIN   = '';
+my $NZB_DIR   = '/tmp/nzbdata';
+my $RAR_BIN   = 'unrar';
+my $TMP_DIR   = File::Temp->newdir('nzbXXXXX');
 
 my $END      = str2time(time2str("%Y-%m-%d", time()));
 my $START    = $END - ($AGE * 86400);
@@ -118,7 +125,7 @@ sub downloadNZB #{{{1
 sub getFirstRAR #{{{1
 {
 	my ($nzb) = @_;
-	my $tmp = 'tmp.nzb';
+	my $tmp = File::Temp->new(TEMPLATE => 'temp_XXXXX', DIR => $TMP_DIR, SUFFIX => '.nzb', UNLINK => 1);
 	downloadNZB($nzb, $tmp);
 
 	my @files = parseNZB($tmp);
@@ -126,19 +133,20 @@ sub getFirstRAR #{{{1
 
 	my $first = determineFirstRAR(@files);
 	if (defined $first) {
-		# TODO realy retrieve articles of first file and compose them
-		return '/home.stand/faui22a/dreweke/download/rar/t.rar';
-	}
-} #}}}1
-sub NZBFileName #{{{1
-{
-	my ($serie, $episode) = @_;
+		my $firstNZB = File::Temp->new(TEMPLATE => 'min_XXXXX', DIR => $TMP_DIR, SUFFIX => '.nzb', UNLINK => 1);
+		writeNZB($first, $firstNZB);
 
-	my $file = $NZB_HOME . '/' . $serie->{id} . '/' . $serie->{id} . '_' . $episode;
-	if ($serie->{hd}) {
-		return $file . '-HD.nzb';
+		my $size = 0;
+		my $sections = $firstNZB->{sections};
+		for my $section (@$sections) {
+			$size += $section->{size};
+		}
+
+		$first->{subject} =~ m/"(.+)"/; # FIXME pattern to nzb way
+		if ((defined $1) && ( -e $1)) {
+			return IO::File->new($1);
+		}
 	}
-	return $file . '.nzb';
 } #}}}1
 sub parseNZB #{{{1
 {
@@ -316,7 +324,14 @@ for my $serie (@series) {
 				my $episodeID = sprintf("S%02dE%02d", $season, $episode);
 				my @nzbs = searchNZB($serie, $episodeID);
 
-				my $file = NZBFileName($serie, $episodeID);
+				my $file = undef;
+				{
+					my $name = $NZB_DIR . '/' . $serie->{id} . '/' . $serie->{id} . '_' . $episode;
+					if ($serie->{hd}) {
+						$name .= '-HD';
+					}
+					$file = IO::File($name . '.nzb');
+				}
 
 				mkpath(dirname($file));
 				if (! -e $file) {
