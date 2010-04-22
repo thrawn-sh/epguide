@@ -61,6 +61,7 @@ sub checkNZB #{{{1
 
 	return 1;
 }#}}}1 
+
 sub determineFirstRAR #{{{1
 {
 	my ($self, @files) = @_;
@@ -94,6 +95,7 @@ sub determineFirstRAR #{{{1
 
 	return $first;
 } #}}}1
+
 sub getFirstRAR #{{{1
 {
 	my ($self, $nzb) = @_;

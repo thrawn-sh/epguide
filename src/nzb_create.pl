@@ -12,16 +12,17 @@ use File::Path;
 use NZB::Binsearch;
 use NZB::Check;
 use NZB::Common;
-use WWW::Mechanize;
+use WWW::Mechanize::GZip;
 
 my $AGE	    = 50;
 my $NZB_DIR = '/tmp/nzbdata';
 my $END     = str2time(time2str("%Y-%m-%d", time()));
 my $START   = $END - ($AGE * 86400);
-my $WWW     = WWW::Mechanize->new();
+my $WWW     = WWW::Mechanize::GZip->new();
+
+my $KEEP_ALL = 1;
 
 $WWW->agent_alias('Windows IE 6');
-$WWW->default_header('Accept-Encoding' => 'deflate,gzip');
 
 # list of posters, we don't want nzbs from {{{1
 my @blacklist =

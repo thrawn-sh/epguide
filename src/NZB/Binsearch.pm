@@ -5,11 +5,10 @@ package NZB::Binsearch;
 use strict;
 use warnings FATAL => 'all';
 
-use WWW::Mechanize;
+use WWW::Mechanize::GZip;
 
-my $WWW = WWW::Mechanize->new();
+my $WWW = WWW::Mechanize::GZip->new();
 $WWW->agent_alias('Windows IE 6');
-$WWW->default_header('Accept-Encoding' => 'deflate,gzip');
 
 sub downloadNZB #{{{1
 {
@@ -19,10 +18,10 @@ sub downloadNZB #{{{1
 	$WWW->agent_alias('Windows IE 6');
 	$WWW->default_header('Accept-Encoding' => 'deflate,gzip');
 
-	my $data = $WWW->post( $url, { $nzb->{id} => 'on', action => 'nzb' } );
+	$WWW->post($url, { $nzb->{'id'} => 'on', action => 'nzb' });
 	if ($WWW->success) {
 		open (FH, ">$file");
-		print FH $data;
+		print FH $WWW->content();
 		close (FH);
 	} else {
 		print STDERR "Can't retrieve $url: $!";
@@ -47,9 +46,9 @@ sub searchNZB #{{{1
 		$url .= '+xvid';
 	}
 
-	my $page = $WWW->get($url);
+	$WWW->get($url);
 	if ($WWW->success) {
-		my $data = $page->decoded_content;
+		my $data = $WWW->content;
 		while ( $data =~ s/(name=\"\d{8,}\".*?)<input\ //xmsi ) {
 			my $line = $1;
 			while (
