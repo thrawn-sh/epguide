@@ -142,6 +142,12 @@ sub getFirstRAR #{{{1
 			$size += $section->{size};
 		}
 
+		my $firstRAR = undef;
+		$first->{subject} =~ m/"(.+)"/; 
+		if ((defined $1) && ( -e $1)) {
+			$firstRAR = File::Spec->rel2abs($TMP_DIR . '/' . $1);
+		} 
+
 		my $pid = fork();
 		if (not defined $pid) {
 			print STDERR "can't fork\n";
@@ -162,14 +168,13 @@ sub getFirstRAR #{{{1
 
 			if ($? != 0) {
 				print STDERR "nzb download not complete\n";
-				return;
+				if (-e $firstRAR) {
+					unlink($firstRAR);
+				}
 			}
 		}
 
-		$first->{subject} =~ m/"(.+)"/; # FIXME pattern to nzb way
-		if ((defined $1) && ( -e $1)) {
-			return File::Spec->rel2abs($TMP_DIR . '/' . $1); 
-		}
+		return $firstRAR;
 	}
 } #}}}1
 sub parseNZB #{{{1
