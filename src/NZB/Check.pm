@@ -22,7 +22,7 @@ sub checkNZB #{{{1
 	my ($self, $nzb, %blacklist) = @_;
 
 	# nzb from blacklisted poster
-	if (defined $blacklist{$nzb->{poster}}) {
+	if (defined $blacklist{$nzb->{'poster'}}) {
 		return 0;
 	}
 
@@ -60,7 +60,7 @@ sub checkNZB #{{{1
 	}
 
 	return 1;
-}#}}}1 
+}#}}}1
 
 sub determineFirstRAR #{{{1
 {
@@ -68,7 +68,7 @@ sub determineFirstRAR #{{{1
 
 	my @rars;
 	for my $file (@files) {
-		if ($file->{subject} =~ m/\.rar/) {
+		if ($file->{'subject'} =~ m/\.rar/) {
 			push(@rars, $file);
 		}
 	}
@@ -76,10 +76,10 @@ sub determineFirstRAR #{{{1
 	if ((scalar @rars) > 1) {
 		sub rar_sort #{{{2
 		{
-			$a->{subject} =~ m/(\d+)\.rar/;
+			$a->{'subject'} =~ m/(\d+)\.rar/;
 			my $part_a = $1;
 
-			$b->{subject} =~ m/(\d+)\.rar/;
+			$b->{'subject'} =~ m/(\d+)\.rar/;
 			my $part_b = $1;
 
 			return $part_a cmp $part_b;
@@ -102,24 +102,24 @@ sub getFirstRAR #{{{1
 	my $tmp = File::Temp->new(TEMPLATE => 'temp_XXXXX', DIR => $TMP_DIR, SUFFIX => '.nzb', UNLINK => 1);
 	NZB::Binsearch->downloadNZB($nzb, $tmp);
 
-	my @files = NZB::Common->parseNZB($tmp);
+	my $files_ref = NZB::Common->parseNZB($tmp);
 
-	my $first = $self->determineFirstRAR(@files);
+	my $first = $self->determineFirstRAR(@$files_ref);
 	if (defined $first) {
 		my $firstNZB = File::Temp->new(TEMPLATE => 'min_XXXXX', DIR => $TMP_DIR, SUFFIX => '.nzb', UNLINK => 1);
 		NZB::Common->writeNZB($first, $firstNZB);
 
 		my $size = 0;
-		my $segments = $first->{'segments'};
-		for my $segment (@$segments) {
+		my $segments_ref = $first->{'segments_ref'};
+		for my $segment (@$segments_ref) {
 			$size += $segment->{'size'};
 		}
 
 		my $firstRAR = undef;
-		$first->{'subject'} =~ m/\"(.+)\"/; 
+		$first->{'subject'} =~ m/\"(.+)\"/;
 		if (defined $1) {
 			$firstRAR = File::Spec->rel2abs($TMP_DIR . '/' . $1);
-		} 
+		}
 
 		my $pid = fork();
 		if (not defined $pid) {

@@ -40,12 +40,13 @@ sub parseNZB #{{{1
 			@segments = sort { $a->{'number'} <=> $b->{'number'} } @segments;
 		}
 
-		push(@files, { date => $date, poster => $poster, subject => $subject, groups => \@groups , segments => \@segments });
+		push(@files, { date => $date, poster => $poster, subject => $subject, groups_ref => \@groups , segments_ref => \@segments });
 	}
 	$nzbdoc->dispose;
 
 	# sort files by subject
-	return sort { $a->{'subject'} cmp $b->{'subject'}; } @files;
+	@files = sort { $a->{'subject'} cmp $b->{'subject'}; } @files;
+	return \@files;
 }#}}}1
 
 sub writeNZB #{{{1
@@ -55,13 +56,13 @@ sub writeNZB #{{{1
 	my $xml = XML::DOM::Document->new;
 	my $nzbElement  = $xml->createElement('nzb');
 	my $fileElement = $xml->createElement('file');
-	$fileElement->setAttribute('date',    $nzbFile->{date});
-	$fileElement->setAttribute('poster',  $nzbFile->{poster});
-	$fileElement->setAttribute('subject', $nzbFile->{subject});
+	$fileElement->setAttribute('date',    $nzbFile->{'date'});
+	$fileElement->setAttribute('poster',  $nzbFile->{'poster'});
+	$fileElement->setAttribute('subject', $nzbFile->{'subject'});
 
 	my $groupsElement = $xml->createElement('groups');
-	my $groups = $nzbFile->{groups};
-	for my $group (@$groups) {
+	my $groups_ref = $nzbFile->{'groups_ref'};
+	for my $group (@$groups_ref) {
 		my $groupElement = $xml->createElement('group');
 		$groupElement->appendChild($xml->createTextNode($group));
 		$groupsElement->appendChild($groupElement);
@@ -69,12 +70,12 @@ sub writeNZB #{{{1
 	$fileElement->appendChild($groupsElement);
 
 	my $segmentsElement = $xml->createElement('segments');
-	my $segments = $nzbFile->{segments};
-	for my $segment (@$segments) {
+	my $segments_ref = $nzbFile->{'segments_ref'};
+	for my $segment (@$segments_ref) {
 		my $segmentElement = $xml->createElement('segment');
-		$segmentElement->setAttribute('bytes',  $segment->{size});
-		$segmentElement->setAttribute('number', $segment->{number});
-		$segmentElement->appendChild($xml->createTextNode($segment->{id}));
+		$segmentElement->setAttribute('bytes',  $segment->{'size'});
+		$segmentElement->setAttribute('number', $segment->{'number'});
+		$segmentElement->appendChild($xml->createTextNode($segment->{'id'}));
 		$segmentsElement->appendChild($segmentElement);
 	}
 	$fileElement->appendChild($segmentsElement);

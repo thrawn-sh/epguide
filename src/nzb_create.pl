@@ -40,26 +40,26 @@ my %bp = map { $_ => 1 } @blacklist;
 # hd    = search for x264 or xvid content
 my @series = #{{{1
 (
-  { id => '24',                   query => '24',                       group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
-  { id => '24',                   query => '24',                       group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
-  { id => 'CSI',                  query => 'CSI',                      group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
-  { id => 'CSI',                  query => 'CSI',                      group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
-  { id => 'CSIMiami',             query => 'CSI.Miami',                group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
-  { id => 'CSIMiami',             query => 'CSI.Miami',                group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
-  { id => 'CSINY',                query => 'CSI.New.York',             group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
-  { id => 'CSINY',                query => 'CSI.New.York',             group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
-  { id => 'NCIS',                 query => 'NCIS',                     group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
-  { id => 'NCIS',                 query => 'NCIS',                     group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
-  { id => 'StarWarsTheCloneWars', query => 'Star.Wars.The.Clone.Wars', group => 'alt.binaries.multimedia', min =>  200, max =>  300, hd => 0 },
-  { id => 'StarWarsTheCloneWars', query => 'Star.Wars.The.Clone.Wars', group => 'alt.binaries.multimedia', min =>  500, max =>  800, hd => 1 },
+	# { id => '24',                   query => '24',                       group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
+#  { id => '24',                   query => '24',                       group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
+	# { id => 'CSI',                  query => 'CSI',                      group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
+#  { id => 'CSI',                  query => 'CSI',                      group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
+#  { id => 'CSIMiami',             query => 'CSI.Miami',                group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
+#  { id => 'CSIMiami',             query => 'CSI.Miami',                group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
+#  { id => 'CSINY',                query => 'CSI.New.York',             group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
+#  { id => 'CSINY',                query => 'CSI.New.York',             group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
+#  { id => 'NCIS',                 query => 'NCIS',                     group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
+#  { id => 'NCIS',                 query => 'NCIS',                     group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
+#  { id => 'StarWarsTheCloneWars', query => 'Star.Wars.The.Clone.Wars', group => 'alt.binaries.multimedia', min =>  200, max =>  300, hd => 0 },
+#  { id => 'StarWarsTheCloneWars', query => 'Star.Wars.The.Clone.Wars', group => 'alt.binaries.multimedia', min =>  500, max =>  800, hd => 1 },
   { id => 'StargateUniverse',     query => 'Stargate.Universe',        group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
-  { id => 'StargateUniverse',     query => 'Stargate.Universe',        group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
+  # { id => 'StargateUniverse',     query => 'Stargate.Universe',        group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
 ); #}}}1
 
 for my $serie (@series) {
-	my $url = 'http://epguides.com/' . $serie->{id} . '/';
+	my $url = 'http://epguides.com/' . $serie->{'id'} . '/';
 	$WWW->get($url);
-	
+
 	if (! $WWW->success) {
 		print  "Can't retrieve $url: $!";
 		next;
@@ -75,17 +75,17 @@ for my $serie (@series) {
 
 			if (($START <= $released) && ($released <= $END)) {
 				my $episodeID = sprintf("S%02dE%02d", $season, $episode);
-				my @nzbs = NZB::Binsearch->searchNZB($serie, $episodeID, $AGE);
+				my $nzbs_ref = NZB::Binsearch->searchNZB($serie, $episodeID, $AGE);
 
-				my $file = $NZB_DIR . '/' . $serie->{id} . '/' . $serie->{id} . '_' . $episodeID;
-				if ($serie->{hd}) {
+				my $file = $NZB_DIR . '/' . $serie->{'id'} . '/' . $serie->{'id'} . '_' . $episodeID;
+				if ($serie->{'hd'}) {
 					$file .= '-HD';
 				}
 				$file .= '.nzb';
 
 				mkpath(dirname($file));
 				if (! -e $file) {
-					for my $nzb (@nzbs) {
+					for my $nzb (@$nzbs_ref) {
 						if (NZB::Check->checkNZB($nzb, %bp)) {
 							NZB::Binsearch->downloadNZB($nzb, $file);
 							last;

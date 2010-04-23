@@ -33,14 +33,14 @@ sub searchNZB #{{{1
 	my ($self, $serie, $episode, $age) = @_;
 	my @nzbs;
 
-	my $url = 'http://binsearch.info/index.php?adv_sort=date&adv_col=on' . 
-	          '&m=&max=25&adv_g=' . $serie->{group} . 
-	          '&adv_age=' . $age . 
-	          '&minsize=' . $serie->{min} . 
-	          '&maxsize=' . $serie->{max} .
-	          '&q=' . $serie->{query} . '+' . $episode . '+HDTV';
+	my $url = 'http://binsearch.info/index.php?adv_sort=date&adv_col=on' .
+	          '&m=&max=25&adv_g=' . $serie->{'group'} .
+	          '&adv_age=' . $age .
+	          '&minsize=' . $serie->{'min'} .
+	          '&maxsize=' . $serie->{'max'} .
+	          '&q=' . $serie->{'query'} . '+' . $episode . '+HDTV';
 
-	if ($serie->{hd}) {
+	if ($serie->{'hd'}) {
 		$url .= '+x264';
 	} else {
 		$url .= '+xvid';
@@ -73,7 +73,7 @@ sub searchNZB #{{{1
 		print  "Can't retrieve $url: $!";
 	}
 
-	return @nzbs;
+	return \@nzbs;
 } #}}}1
 
 1;
