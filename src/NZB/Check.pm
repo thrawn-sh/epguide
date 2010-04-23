@@ -12,14 +12,12 @@ use NZB::Common;
 
 File::Temp->safe_level(File::Temp::HIGH);
 
-my $NET_SPEED = 100*1000; # download speed (byte per second)
-my $NZB_BIN   = '~sithglan/nzb';
-my $RAR_BIN   = 'unrar';
+my $NET_SPEED = 100*1000; # download speed in bytes per second (start with a value of 100Kb/s)
 my $TMP_DIR   = File::Temp->newdir(File::Spec->tmpdir() . '/nzb_XXXXX', UNLINK => 1);
 
 sub checkNZB #{{{1
 {
-	my ($self, $nzb, %blacklist) = @_;
+	my ($self, $nzb, $nzb_bin, $rar_bin, %blacklist) = @_;
 
 	# nzb from blacklisted poster
 	if (defined $blacklist{$nzb->{'poster'}}) {
@@ -27,7 +25,7 @@ sub checkNZB #{{{1
 	}
 
 	#  password and rar in rar
-	my $rar = $self->getFirstRAR($nzb);
+	my $rar = $self->getFirstRAR($nzb, $nzb_bin);
 	if ((! defined $rar) || (! -r $rar)) {
 		# no rar to check => fail
 		return 0;
@@ -36,8 +34,8 @@ sub checkNZB #{{{1
 	# lt  : technical filelist
 	# lb  : list bare file names
 	# -p- : don't ask for password
-	my @bare_files = `$RAR_BIN lb -p- $rar 2> /dev/null`;
-	my @technical  = `$RAR_BIN lt -p- $rar 2> /dev/null`;
+	my @bare_files = `$rar_bin lb -p- $rar 2> /dev/null`;
+	my @technical  = `$rar_bin lt -p- $rar 2> /dev/null`;
 	unlink($rar);
 
 	# empty rar or encrypted headers
@@ -98,7 +96,7 @@ sub determineFirstRAR #{{{1
 
 sub getFirstRAR #{{{1
 {
-	my ($self, $nzb) = @_;
+	my ($self, $nzb, $nzb_bin) = @_;
 	my $tmp = File::Temp->new(TEMPLATE => 'temp_XXXXX', DIR => $TMP_DIR, SUFFIX => '.nzb', UNLINK => 1);
 	NZB::Binsearch->downloadNZB($nzb, $tmp);
 
@@ -129,22 +127,22 @@ sub getFirstRAR #{{{1
 
 			# run nzb for $firstNZB
 			chdir $TMP_DIR;
-			`$NZB_BIN $absFile > /dev/null 2> /dev/null`;
+			`$nzb_bin $absFile > /dev/null 2> /dev/null`;
 			exit 0;
 		} else {
 			# give the child time to download the nzb (factor 2 is
 			# grace)
-			my $sleepTime = (int (($size / $NET_SPEED) * 2 + 5));
-			my $smallSleep = 5;
-			while ($sleepTime > 0) {
-				print $sleepTime . "\n";
-				sleep($smallSleep);
+			my $sleepStep = 5;
+			my $waitTime = (int (($size / $NET_SPEED) * 2 + $sleepStep));
+			while ($waitTime > 0) {
+				print "$waitTime\n";
+				sleep($sleepStep);
+
+				$waitTime -= $sleepStep;
 
 				if (-e $firstRAR) {
 					last;
 				}
-
-				$sleepTime -= $smallSleep;
 			}
 
 			kill(-9, $pid);
@@ -161,5 +159,7 @@ sub getFirstRAR #{{{1
 		return $firstRAR;
 	}
 } #}}}1
+
+sub net_speed { $NET_SPEED = $_; }
 
 1;

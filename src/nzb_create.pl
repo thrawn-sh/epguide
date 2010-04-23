@@ -19,6 +19,8 @@ my $NZB_DIR = '/tmp/nzbdata';
 my $END     = str2time(time2str("%Y-%m-%d", time()));
 my $START   = $END - ($AGE * 86400);
 my $WWW     = WWW::Mechanize::GZip->new();
+my $RAR_BIN = 'unrar';
+my $NZB_BIN = '~sithglan/nzb';
 
 $WWW->agent_alias('Windows IE 6');
 
@@ -84,7 +86,7 @@ for my $serie (@series) {
 				mkpath(dirname($file));
 				if (! -e $file) {
 					for my $nzb (@$nzbs_ref) {
-						if (NZB::Check->checkNZB($nzb, %bp)) {
+						if (NZB::Check->checkNZB($nzb, $NZB_BIN, $RAR_BIN, %bp)) {
 							NZB::Binsearch->downloadNZB($nzb, $file);
 							last;
 						}
