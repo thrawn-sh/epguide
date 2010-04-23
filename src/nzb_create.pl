@@ -20,8 +20,6 @@ my $END     = str2time(time2str("%Y-%m-%d", time()));
 my $START   = $END - ($AGE * 86400);
 my $WWW     = WWW::Mechanize::GZip->new();
 
-my $KEEP_ALL = 1;
-
 $WWW->agent_alias('Windows IE 6');
 
 # list of posters, we don't want nzbs from {{{1
