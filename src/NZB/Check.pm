@@ -62,10 +62,10 @@ sub checkNZB #{{{1
 
 sub determineFirstRAR #{{{1
 {
-	my ($self, @files) = @_;
+	my ($self, $files_ref) = @_;
 
 	my @rars;
-	for my $file (@files) {
+	for my $file (@$files_ref) {
 		if ($file->{'subject'} =~ m/\.rar/) {
 			push(@rars, $file);
 		}
@@ -102,7 +102,7 @@ sub getFirstRAR #{{{1
 
 	my $files_ref = NZB::Common->parseNZB($tmp);
 
-	my $first = $self->determineFirstRAR(@$files_ref);
+	my $first = $self->determineFirstRAR($files_ref);
 	if (defined $first) {
 		my $firstNZB = File::Temp->new(TEMPLATE => 'min_XXXXX', DIR => $TMP_DIR, SUFFIX => '.nzb', UNLINK => 1);
 		NZB::Common->writeNZB($first, $firstNZB);
