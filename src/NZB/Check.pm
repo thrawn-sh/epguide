@@ -12,7 +12,7 @@ use NZB::Common;
 
 File::Temp->safe_level(File::Temp::HIGH);
 
-my $NET_SPEED = 100*1000; # download speed in bytes per second (start with a value of 100Kb/s)
+my $NET_SPEED = undef;
 my $TMP_DIR   = File::Temp->newdir(File::Spec->tmpdir() . '/nzb_XXXXX', UNLINK => 1);
 
 sub checkNZB #{{{1
@@ -160,6 +160,6 @@ sub getFirstRAR #{{{1
 	}
 } #}}}1
 
-sub net_speed { $NET_SPEED = $_; }
+sub net_speed { my $($self, $speed) = @_; $NET_SPEED = $speed; }
 
 1;

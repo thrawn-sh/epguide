@@ -14,13 +14,15 @@ use NZB::Check;
 use NZB::Common;
 use WWW::Mechanize::GZip;
 
+NZB::Check->net_speed(100*1000);
+
 my $AGE	    = 50;
-my $NZB_DIR = '/tmp/nzbdata';
 my $END     = str2time(time2str("%Y-%m-%d", time()));
+my $NZB_BIN = '~sithglan/nzb';
+my $NZB_DIR = '/tmp/nzbdata';
+my $RAR_BIN = 'unrar';
 my $START   = $END - ($AGE * 86400);
 my $WWW     = WWW::Mechanize::GZip->new();
-my $RAR_BIN = 'unrar';
-my $NZB_BIN = '~sithglan/nzb';
 
 $WWW->agent_alias('Windows IE 6');
 
