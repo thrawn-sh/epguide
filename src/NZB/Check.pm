@@ -160,6 +160,6 @@ sub getFirstRAR #{{{1
 	}
 } #}}}1
 
-sub net_speed { my $($self, $speed) = @_; $NET_SPEED = $speed; }
+sub net_speed { my ($self, $speed) = @_; $NET_SPEED = $speed; }
 
 1;
