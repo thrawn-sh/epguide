@@ -18,7 +18,7 @@ NZB::Check->net_speed(100*1000);
 
 my $AGE	    = 50;
 my $END     = str2time(time2str("%Y-%m-%d", time()));
-my $NZB_BIN = '~sithglan/nzb';
+my $NZB_BIN = '/home/thrawn/workspace/nzb/src/nzb';
 my $NZB_DIR = '/tmp/nzbdata';
 my $RAR_BIN = 'unrar';
 my $START   = $END - ($AGE * 86400);
@@ -29,7 +29,6 @@ $WWW->agent_alias('Windows IE 6');
 # list of posters, we don't want nzbs from {{{1
 my @blacklist =
 (
-	'ficken',
 );
 my %bp = map { $_ => 1 } @blacklist;
 #}}}1
@@ -42,20 +41,20 @@ my %bp = map { $_ => 1 } @blacklist;
 # hd    = search for x264 or xvid content
 my @series = #{{{1
 (
-	# { id => '24',                   query => '24',                       group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
-#  { id => '24',                   query => '24',                       group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
-	# { id => 'CSI',                  query => 'CSI',                      group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
-#  { id => 'CSI',                  query => 'CSI',                      group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
-#  { id => 'CSIMiami',             query => 'CSI.Miami',                group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
-#  { id => 'CSIMiami',             query => 'CSI.Miami',                group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
-#  { id => 'CSINY',                query => 'CSI.New.York',             group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
-#  { id => 'CSINY',                query => 'CSI.New.York',             group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
-#  { id => 'NCIS',                 query => 'NCIS',                     group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
-#  { id => 'NCIS',                 query => 'NCIS',                     group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
-#  { id => 'StarWarsTheCloneWars', query => 'Star.Wars.The.Clone.Wars', group => 'alt.binaries.multimedia', min =>  200, max =>  300, hd => 0 },
-#  { id => 'StarWarsTheCloneWars', query => 'Star.Wars.The.Clone.Wars', group => 'alt.binaries.multimedia', min =>  500, max =>  800, hd => 1 },
-  { id => 'StargateUniverse',     query => 'Stargate.Universe',        group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
-  # { id => 'StargateUniverse',     query => 'Stargate.Universe',        group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
+ { id => '24',                   query => '24',                       group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
+ { id => '24',                   query => '24',                       group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
+ { id => 'CSI',                  query => 'CSI',                      group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
+ { id => 'CSI',                  query => 'CSI',                      group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
+ { id => 'CSIMiami',             query => 'CSI.Miami',                group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
+ { id => 'CSIMiami',             query => 'CSI.Miami',                group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
+ { id => 'CSINY',                query => 'CSI.New.York',             group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
+ { id => 'CSINY',                query => 'CSI.New.York',             group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
+ { id => 'NCIS',                 query => 'NCIS',                     group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
+ { id => 'NCIS',                 query => 'NCIS',                     group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
+ { id => 'StarWarsTheCloneWars', query => 'Star.Wars.The.Clone.Wars', group => 'alt.binaries.multimedia', min =>  200, max =>  300, hd => 0 },
+ { id => 'StarWarsTheCloneWars', query => 'Star.Wars.The.Clone.Wars', group => 'alt.binaries.multimedia', min =>  500, max =>  800, hd => 1 },
+ { id => 'StargateUniverse',     query => 'Stargate.Universe',        group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
+ { id => 'StargateUniverse',     query => 'Stargate.Universe',        group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
 ); #}}}1
 
 for my $serie (@series) {
