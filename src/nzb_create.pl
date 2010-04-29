@@ -14,21 +14,23 @@ use NZB::Check;
 use NZB::Common;
 use WWW::Mechanize::GZip;
 
+NZB::Check->debug(1);
 NZB::Check->net_speed(100*1000);
 
 my $AGE	    = 50;
 my $END     = str2time(time2str("%Y-%m-%d", time()));
-my $NZB_BIN = '/home/thrawn/workspace/nzb/src/nzb';
-my $NZB_DIR = '/tmp/nzbdata';
+my $NZB_BIN = '../util/nzb';
+my $NZB_DIR = '/home/inf2/i2staff/dreweke/nzbdata';
 my $RAR_BIN = 'unrar';
 my $START   = $END - ($AGE * 86400);
 my $WWW     = WWW::Mechanize::GZip->new();
 
 $WWW->agent_alias('Windows IE 6');
 
-# list of posters, we don't want nzbs from {{{1
+# list of posters, we don't want nzbs fro m {{{1
 my @blacklist =
 (
+	'ficken',
 );
 my %bp = map { $_ => 1 } @blacklist;
 #}}}1

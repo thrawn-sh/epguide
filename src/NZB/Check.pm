@@ -14,6 +14,7 @@ File::Temp->safe_level(File::Temp::HIGH);
 
 my $NET_SPEED = undef;
 my $TMP_DIR   = File::Temp->newdir(File::Spec->tmpdir() . '/nzb_XXXXX', UNLINK => 1);
+my $DEBUG     = 0;
 
 sub checkNZB #{{{1
 {
@@ -21,6 +22,7 @@ sub checkNZB #{{{1
 
 	# nzb from blacklisted poster
 	if (defined $blacklist{$nzb->{'poster'}}) {
+		if ($DEBUG) { print STDERR "blacklist\n"; }
 		return 0;
 	}
 
@@ -28,6 +30,7 @@ sub checkNZB #{{{1
 	my $rar = $self->getFirstRAR($nzb, $nzb_bin);
 	if ((! defined $rar) || (! -r $rar)) {
 		# no rar to check => fail
+		if ($DEBUG) { print STDERR "no rar download\n"; }
 		return 0;
 	}
 
@@ -40,12 +43,14 @@ sub checkNZB #{{{1
 
 	# empty rar or encrypted headers
 	if (scalar @bare_files == 0) {
+		if ($DEBUG) { print STDERR "empty rar\n"; }
 		return 0;
 	}
 
 	# check for encrypted data
 	for my $line (@technical) {
 		if ($line =~ m/^\*/) {
+			if ($DEBUG) { print STDERR "encrypted rar\n"; }
 			return 0;
 		}
 	}
@@ -53,10 +58,12 @@ sub checkNZB #{{{1
 	# check for rar-in-rar
 	for my $file (@bare_files) {
 		if ($file =~ m/\.rar$/) {
+			if ($DEBUG) { print STDERR "rar-in-rar\n"; }
 			return 0;
 		}
 	}
 
+	if ($DEBUG) { print STDERR "nzb ok\n"; }
 	return 1;
 }#}}}1
 
@@ -134,22 +141,20 @@ sub getFirstRAR #{{{1
 			# grace)
 			my $sleepStep = 5;
 			my $waitTime = (int (($size / $NET_SPEED) * 2 + $sleepStep));
-			while ($waitTime > 0) {
-				print "$waitTime\n";
-				sleep($sleepStep);
 
-				$waitTime -= $sleepStep;
+			do {
+				sleep($sleepStep);
 
 				if (-e $firstRAR) {
 					last;
 				}
-			}
+				$waitTime -= $sleepStep;
+			} while (($waitTime > 0) && (waitpid($pid, 1) == 0));
 
 			kill(-9, $pid);
 			waitpid($pid, 1);
 
 			if ($? != 0) {
-				print STDERR "nzb download not complete\n";
 				if (-e $firstRAR) {
 					unlink($firstRAR);
 				}
@@ -160,6 +165,7 @@ sub getFirstRAR #{{{1
 	}
 } #}}}1
 
-sub net_speed { my ($self, $speed) = @_; $NET_SPEED = $speed; }
+sub debug     { my($self, $debug) = @_; $DEBUG     = $debug; }
+sub net_speed { my($self, $speed) = @_; $NET_SPEED = $speed; }
 
 1;
