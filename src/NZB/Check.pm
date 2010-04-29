@@ -28,7 +28,7 @@ sub checkNZB #{{{1
 
 	#  password and rar in rar
 	my $rar = $self->getFirstRAR($nzb, $nzb_bin);
-	if ((! defined $rar) || (! -r $rar)) {
+	if (! -e $rar) {
 		# no rar to check => fail
 		if ($DEBUG) { print STDERR "no rar download\n"; }
 		return 0;
@@ -144,23 +144,13 @@ sub getFirstRAR #{{{1
 			my $sleepStep = 5;
 			my $waitTime = (int (($size / $NET_SPEED) * 2 + $sleepStep));
 
-			do {
+			while (($waitTime > 0) && (waitpid($pid, 1) == 0) && (! -e $firstRAR)) {
 				sleep($sleepStep);
-
-				if (-e $firstRAR) {
-					last;
-				}
 				$waitTime -= $sleepStep;
-			} while (($waitTime > 0) && (waitpid($pid, 1) == 0));
+			}
 
 			kill(-9, $pid);
 			waitpid($pid, 1);
-
-			if ($? != 0) {
-				if (-e $firstRAR) {
-					unlink($firstRAR);
-				}
-			}
 		}
 
 		return $firstRAR;
