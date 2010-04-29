@@ -73,7 +73,7 @@ sub determineFirstRAR #{{{1
 
 	my @rars;
 	for my $file (@$files_ref) {
-		if ($file->{'subject'} =~ m/\.rar/) {
+		if ($file->{'subject'} =~ m/\.rar"/) {
 			push(@rars, $file);
 		}
 	}
@@ -81,11 +81,13 @@ sub determineFirstRAR #{{{1
 	if ((scalar @rars) > 1) {
 		sub rar_sort #{{{2
 		{
-			$a->{'subject'} =~ m/(\d+)\.rar/;
-			my $part_a = $1;
+			my $part_a = "";
+			$a->{'subject'} =~ m/(\d+)\.rar"/;
+			$part_a = $1;
 
-			$b->{'subject'} =~ m/(\d+)\.rar/;
-			my $part_b = $1;
+			my $part_b = "";
+			$b->{'subject'} =~ m/(\d+)\.rar"/;
+			$part_b = $1;
 
 			return $part_a cmp $part_b;
 		} #}}}2

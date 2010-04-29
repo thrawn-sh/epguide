@@ -20,7 +20,7 @@ NZB::Check->net_speed(100*1000);
 my $AGE	    = 50;
 my $END     = str2time(time2str("%Y-%m-%d", time()));
 my $NZB_BIN = '../util/nzb';
-my $NZB_DIR = '/home/inf2/i2staff/dreweke/nzbdata';
+my $NZB_DIR = 'nzbdata';
 my $RAR_BIN = 'unrar';
 my $START   = $END - ($AGE * 86400);
 my $WWW     = WWW::Mechanize::GZip->new();
@@ -86,10 +86,10 @@ for my $serie (@series) {
 				}
 				$file .= '.nzb';
 
-				mkpath(dirname($file));
 				if (! -e $file) {
 					for my $nzb (@$nzbs_ref) {
 						if (NZB::Check->checkNZB($nzb, $NZB_BIN, $RAR_BIN, %bp)) {
+							mkpath(dirname($file));
 							NZB::Binsearch->downloadNZB($nzb, $file);
 							last;
 						}
