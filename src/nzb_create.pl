@@ -63,7 +63,7 @@ for my $serie (@series) {
 	$WWW->get($url);
 
 	if (! $WWW->success) {
-		print  "Can't retrieve $url: $!";
+		print STDERR "Can't retrieve $url: $!";
 		next;
 	}
 
