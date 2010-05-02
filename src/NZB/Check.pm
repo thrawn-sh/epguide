@@ -5,6 +5,9 @@ package NZB::Check;
 use strict;
 use warnings FATAL => 'all';
 
+# cleanup temporary files and directories on signals
+$SIG{TERM} = $SIG{INT} = $SIG{QUIT} = $SIG{HUP} = sub { die; };
+
 use File::Basename;
 use File::Spec;
 use File::Temp;
