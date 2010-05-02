@@ -26,20 +26,12 @@ $WWW->agent_alias('Windows IE 6');
 NZB::Check->debug($DEBUG);
 NZB::Check->net_speed(500*1000); # 500 kb/s
 
-# list of posters, we don't want nzbs fro m {{{1
 my @blacklist =
 (
 	'ficken',
 );
 my %bp = map { $_ => 1 } @blacklist;
-#}}}1
 
-# id    = folder name on http://epguides.com/
-# query = series names to search for on http://binsearch.info/
-# group = newsgroup to search for posts
-# min   = minimal size of nzb collection
-# max   = maximal size of nzb collection
-# hd    = search for x264 or xvid content
 my @series = #{{{1
 (
  { id => '24',                   query => '24',                       group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },

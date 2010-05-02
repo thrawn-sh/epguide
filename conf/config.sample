@@ -1,0 +1,21 @@
+%CFG = (
+	'age'    => 10,
+	'debug'  => 1,
+	'nzbdir' => 'nzbdata',
+	'speed'  => 1000, # kb/s
+
+	# list of posters, we don't want nzbs from
+	'blacklist' => 
+		[
+		],
+
+	# id    = folder name on http://epguides.com/
+	# query = series names to search for on http://binsearch.info/
+	# group = newsgroup to search for posts
+	# min   = minimal size of nzb collection
+	# max   = maximal size of nzb collection
+	# hd    = search for x264 or xvid content
+	'series' => 
+		[
+		]
+);
