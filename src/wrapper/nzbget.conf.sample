@@ -1,4 +1,5 @@
 DownloadRate=0
+
 Server1.Level=0
 Server1.Host=nntp.example.net
 Server1.Port=119
