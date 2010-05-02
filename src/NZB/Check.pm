@@ -137,8 +137,10 @@ sub getFirstRAR #{{{1
 			my $absFile = File::Spec->rel2abs($firstNZB);
 
 			# download $firstNZB
-			my $workingDir = dirname($0);
-			`$workingDir/nzb_wrapper.sh $TMP_DIR $absFile > /dev/null 2> /dev/null`;
+			my $wrapper = dirname($0) . '/nzb_wrapper.sh';
+			die 'no \'' . $wrapper . '\' available' unless -e $wrapper;
+
+			`$wrapper $TMP_DIR $absFile > /dev/null 2> /dev/null`;
 			exit 0;
 		} else {
 			# give the child time to download the nzb (factor 2 is
