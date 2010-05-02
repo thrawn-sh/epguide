@@ -1,0 +1,31 @@
+DownloadRate=0
+Server1.Level=0
+Server1.Host=nntp.example.net
+Server1.Port=119
+Server1.Connections=10
+Server1.Username=usenet
+Server1.Password=leacher
+
+# DestDir, LockFile, LogFile, NzbDir and QueueDir are redefined by the nzbget
+# wrapper script
+AppendCategoryDir=no
+AppendNzbDir=no
+ContinuePartial=yes
+CreateLog=no
+CursesNzbName=no
+DestDir=/tmp
+DetailTarget=none
+DirectWrite=yes
+ErrorTarget=none
+InfoTarget=none
+LockFile=/tmp/nzbget/lock
+LogFile=/tmp/nzbget/log
+NzbCleanupDisk=yes
+NzbDir=/tmp/nzbget/nzb
+QueueDir=/tmp/nzbget/queue
+ReloadPostQueue=no
+ReloadQueue=no
+RenameBroken=yes
+SaveQueue=no
+TempDir=/dev/shm
+WarningTarget=none

@@ -14,18 +14,17 @@ use NZB::Check;
 use NZB::Common;
 use WWW::Mechanize::GZip;
 
-NZB::Check->debug(1);
-NZB::Check->net_speed(100*1000);
-
 my $AGE	    = 50;
+my $DEBUG   = 1;
 my $END     = str2time(time2str("%Y-%m-%d", time()));
-my $NZB_BIN = '../util/nzb';
 my $NZB_DIR = 'nzbdata';
-my $RAR_BIN = 'unrar';
 my $START   = $END - ($AGE * 86400);
 my $WWW     = WWW::Mechanize::GZip->new();
 
 $WWW->agent_alias('Windows IE 6');
+
+NZB::Check->debug($DEBUG);
+NZB::Check->net_speed(500*1000); # 500 kb/s
 
 # list of posters, we don't want nzbs fro m {{{1
 my @blacklist =
@@ -88,7 +87,8 @@ for my $serie (@series) {
 
 				if (! -e $file) {
 					for my $nzb (@$nzbs_ref) {
-						if (NZB::Check->checkNZB($nzb, $NZB_BIN, $RAR_BIN, %bp)) {
+						if ($DEBUG) { print STDERR $serie->{'id'} . ': ' . $episodeID . ($serie->{'hd'} ? '-HD' : '') ."\n"; }
+						if (NZB::Check->checkNZB($nzb, %bp)) {
 							mkpath(dirname($file));
 							NZB::Binsearch->downloadNZB($nzb, $file);
 							last;

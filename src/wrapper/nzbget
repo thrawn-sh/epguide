@@ -1,0 +1,15 @@
+#!/bin/sh -e
+
+BIN=nzbget
+PWD=$(dirname $(readlink -f $0))
+
+dir=${1}; shift
+nzb=${1}; shift
+
+${BIN} -c ${PWD}/nzbget.conf \
+-o DestDir=${dir} \
+-o LockFile=${dir}/nzbget/lock \
+-o LogFile=${dir}/nzbget/log \
+-o NzbDir=${dir}/nzbget/nzb \
+-o QueueDir=${dir}/nzbget/queue \
+${nzb} 

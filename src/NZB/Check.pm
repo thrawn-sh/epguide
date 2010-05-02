@@ -5,6 +5,7 @@ package NZB::Check;
 use strict;
 use warnings FATAL => 'all';
 
+use File::Basename;
 use File::Spec;
 use File::Temp;
 use NZB::Binsearch;
@@ -12,13 +13,14 @@ use NZB::Common;
 
 File::Temp->safe_level(File::Temp::HIGH);
 
-my $NET_SPEED = undef;
-my $TMP_DIR   = File::Temp->newdir(File::Spec->tmpdir() . '/nzb_XXXXX', UNLINK => 1);
 my $DEBUG     = 0;
+my $NET_SPEED = 10 * 1000; # 10 kb/s
+my $RAR_BIN   = 'unrar';
+my $TMP_DIR   = File::Temp->newdir(File::Spec->tmpdir() . '/nzb_XXXXX', UNLINK => 1);
 
 sub checkNZB #{{{1
 {
-	my ($self, $nzb, $nzb_bin, $rar_bin, %blacklist) = @_;
+	my ($self, $nzb,  %blacklist) = @_;
 
 	# nzb from blacklisted poster
 	if (defined $blacklist{$nzb->{'poster'}}) {
@@ -27,7 +29,7 @@ sub checkNZB #{{{1
 	}
 
 	#  password and rar in rar
-	my $rar = $self->getFirstRAR($nzb, $nzb_bin);
+	my $rar = $self->getFirstRAR($nzb);
 	if (! -e $rar) {
 		# no rar to check => fail
 		if ($DEBUG) { print STDERR "no rar download\n"; }
@@ -37,8 +39,8 @@ sub checkNZB #{{{1
 	# lt  : technical filelist
 	# lb  : list bare file names
 	# -p- : don't ask for password
-	my @bare_files = `$rar_bin lb -p- $rar 2> /dev/null`;
-	my @technical  = `$rar_bin lt -p- $rar 2> /dev/null`;
+	my @bare_files = `$RAR_BIN lb -p- $rar 2> /dev/null`;
+	my @technical  = `$RAR_BIN lt -p- $rar 2> /dev/null`;
 	unlink($rar);
 
 	# empty rar or encrypted headers
@@ -105,7 +107,7 @@ sub determineFirstRAR #{{{1
 
 sub getFirstRAR #{{{1
 {
-	my ($self, $nzb, $nzb_bin) = @_;
+	my ($self, $nzb) = @_;
 	my $tmp = File::Temp->new(TEMPLATE => 'temp_XXXXX', DIR => $TMP_DIR, SUFFIX => '.nzb', UNLINK => 1);
 	NZB::Binsearch->downloadNZB($nzb, $tmp);
 
@@ -134,9 +136,9 @@ sub getFirstRAR #{{{1
 		} elsif ($pid == 0) {
 			my $absFile = File::Spec->rel2abs($firstNZB);
 
-			# run nzb for $firstNZB
-			chdir $TMP_DIR;
-			`$nzb_bin $absFile > /dev/null 2> /dev/null`;
+			# download $firstNZB
+			my $workingDir = dirname($0);
+			`$workingDir/nzb_wrapper.sh $TMP_DIR $absFile > /dev/null 2> /dev/null`;
 			exit 0;
 		} else {
 			# give the child time to download the nzb (factor 2 is
@@ -159,5 +161,6 @@ sub getFirstRAR #{{{1
 
 sub debug     { my($self, $debug) = @_; $DEBUG     = $debug; }
 sub net_speed { my($self, $speed) = @_; $NET_SPEED = $speed; }
+sub rar       { my($self, $rar  ) = @_; $RAR_BIN   = $rar  ; }
 
 1;
