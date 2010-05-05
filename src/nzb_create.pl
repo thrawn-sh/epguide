@@ -14,41 +14,19 @@ use NZB::Check;
 use NZB::Common;
 use WWW::Mechanize::GZip;
 
-my $AGE	    = 50;
-my $DEBUG   = 1;
+my %CFG;
+eval `cat $HOME/.ficken` || die "could not slurp in $HOME/.ficken: $!";
+
 my $END     = str2time(time2str("%Y-%m-%d", time()));
-my $NZB_DIR = 'nzbdata';
-my $START   = $END - ($AGE * 86400);
+my $START   = $END - ($CFG{'age'} * 86400);
 my $WWW     = WWW::Mechanize::GZip->new();
 
 $WWW->agent_alias('Windows IE 6');
 
-NZB::Check->debug($DEBUG);
-NZB::Check->net_speed(500*1000); # 500 kb/s
+NZB::Check->debug($CFG{'debug'});
+NZB::Check->net_speed($CFG{'speed'});
 
-my @blacklist =
-(
-	'ficken',
-);
-my %bp = map { $_ => 1 } @blacklist;
-
-my @series = #{{{1
-(
- { id => '24',                   query => '24',                       group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
- { id => '24',                   query => '24',                       group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
- { id => 'CSI',                  query => 'CSI',                      group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
- { id => 'CSI',                  query => 'CSI',                      group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
- { id => 'CSIMiami',             query => 'CSI.Miami',                group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
- { id => 'CSIMiami',             query => 'CSI.Miami',                group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
- { id => 'CSINY',                query => 'CSI.New.York',             group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
- { id => 'CSINY',                query => 'CSI.New.York',             group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
- { id => 'NCIS',                 query => 'NCIS',                     group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
- { id => 'NCIS',                 query => 'NCIS',                     group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
- { id => 'StarWarsTheCloneWars', query => 'Star.Wars.The.Clone.Wars', group => 'alt.binaries.multimedia', min =>  200, max =>  300, hd => 0 },
- { id => 'StarWarsTheCloneWars', query => 'Star.Wars.The.Clone.Wars', group => 'alt.binaries.multimedia', min =>  500, max =>  800, hd => 1 },
- { id => 'StargateUniverse',     query => 'Stargate.Universe',        group => 'alt.binaries.multimedia', min =>  350, max =>  500, hd => 0 },
- { id => 'StargateUniverse',     query => 'Stargate.Universe',        group => 'alt.binaries.multimedia', min => 1000, max => 1500, hd => 1 },
-); #}}}1
+my %bp = map { $_ => 1 } @{$CFG{'blacklist'}}
 
 for my $serie (@series) {
 	my $url = 'http://epguides.com/' . $serie->{'id'} . '/';
@@ -69,9 +47,9 @@ for my $serie (@series) {
 
 			if (($START <= $released) && ($released <= $END)) {
 				my $episodeID = sprintf("S%02dE%02d", $season, $episode);
-				my $nzbs_ref = NZB::Binsearch->searchNZB($serie, $episodeID, $AGE);
+				my $nzbs_ref = NZB::Binsearch->searchNZB($serie, $episodeID, $CFG{'age'});
 
-				my $file = $NZB_DIR . '/' . $serie->{'id'} . '/' . $serie->{'id'} . '_' . $episodeID;
+				my $file = $CFG{'nzbdir'} . '/' . $serie->{'id'} . '_' . $episodeID;
 				if ($serie->{'hd'}) {
 					$file .= '-HD';
 				}
@@ -79,7 +57,7 @@ for my $serie (@series) {
 
 				if (! -e $file) {
 					for my $nzb (@$nzbs_ref) {
-						if ($DEBUG) { print STDERR $serie->{'id'} . ': ' . $episodeID . ($serie->{'hd'} ? '-HD' : '') ."\n"; }
+						if ($CFG{'debug'}) { print STDERR $serie->{'id'} . ': ' . $episodeID . ($serie->{'hd'} ? '-HD' : '') ."\n"; }
 						if (NZB::Check->checkNZB($nzb, %bp)) {
 							mkpath(dirname($file));
 							NZB::Binsearch->downloadNZB($nzb, $file);
