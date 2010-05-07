@@ -76,7 +76,7 @@ sub determineFirstRAR #{{{1
 	my ($self, $files_ref) = @_;
 
 	my @rars;
-	for my $file (@$files_ref) {
+	for my $file (@{$files_ref}) {
 		if ($file->{'subject'} =~ m/\.rar"/) {
 			push(@rars, $file);
 		}
@@ -121,8 +121,7 @@ sub getFirstRAR #{{{1
 		NZB::Common->writeNZB($first, $firstNZB);
 
 		my $size = 0;
-		my $segments_ref = $first->{'segments_ref'};
-		for my $segment (@$segments_ref) {
+		for my $segment (@{$first->{'segments_ref'}}) {
 			$size += $segment->{'size'};
 		}
 

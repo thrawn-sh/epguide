@@ -61,8 +61,7 @@ sub writeNZB #{{{1
 	$fileElement->setAttribute('subject', $nzbFile->{'subject'});
 
 	my $groupsElement = $xml->createElement('groups');
-	my $groups_ref = $nzbFile->{'groups_ref'};
-	for my $group (@$groups_ref) {
+	for my $group (@{$nzbFile->{'groups_ref'}}) {
 		my $groupElement = $xml->createElement('group');
 		$groupElement->appendChild($xml->createTextNode($group));
 		$groupsElement->appendChild($groupElement);
@@ -70,8 +69,7 @@ sub writeNZB #{{{1
 	$fileElement->appendChild($groupsElement);
 
 	my $segmentsElement = $xml->createElement('segments');
-	my $segments_ref = $nzbFile->{'segments_ref'};
-	for my $segment (@$segments_ref) {
+	for my $segment (@{$nzbFile->{'segments_ref'}}) {
 		my $segmentElement = $xml->createElement('segment');
 		$segmentElement->setAttribute('bytes',  $segment->{'size'});
 		$segmentElement->setAttribute('number', $segment->{'number'});
