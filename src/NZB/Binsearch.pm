@@ -73,6 +73,7 @@ sub searchNZB #{{{1
 		print  "Can't retrieve $url: $!";
 	}
 
+	@nzbs= sort { $a->{'id'} cmp $b->{'id'}; } @nzbs;
 	return \@nzbs;
 } #}}}1
 
