@@ -15,7 +15,7 @@ use NZB::Common;
 use WWW::Mechanize::GZip;
 
 my %CFG;
-eval `cat $ENV{HOME}/.ficken` || die "could not slurp in $ENV{HOME}/.ficken: $!";
+eval `cat $ENV{HOME}/.nzb-collect` || die "could not slurp in $ENV{HOME}/.nzb-collect: $!";
 
 my $END     = str2time(time2str("%Y-%m-%d", time()));
 my $START   = $END - ($CFG{'age'} * 86400);
