@@ -15,7 +15,7 @@ use NZB::Common;
 use WWW::Mechanize::GZip;
 
 my %CFG;
-eval `cat $HOME/.ficken` || die "could not slurp in $HOME/.ficken: $!";
+eval `cat $ENV{HOME}/.ficken` || die "could not slurp in $ENV{HOME}/.ficken: $!";
 
 my $END     = str2time(time2str("%Y-%m-%d", time()));
 my $START   = $END - ($CFG{'age'} * 86400);
@@ -26,9 +26,10 @@ $WWW->agent_alias('Windows IE 6');
 NZB::Check->debug($CFG{'debug'});
 NZB::Check->net_speed($CFG{'speed'});
 
-my %bp = map { $_ => 1 } @{$CFG{'blacklist'}}
+my %bp = map { $_ => 1 } @{$CFG{'blacklist'}};
 
-for my $serie (@series) {
+for my $serie (@{$CFG{'series'}}) {
+
 	my $url = 'http://epguides.com/' . $serie->{'id'} . '/';
 	$WWW->get($url);
 
