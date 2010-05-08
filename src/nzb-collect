@@ -3,19 +3,63 @@
 use strict;
 use warnings FATAL => 'all';
 
-use lib '../lib';
+use lib '../lib'; # FIXME
 
 use Date::Format;
 use Date::Parse;
 use File::Basename;
 use File::Path;
+use Getopt::Long;
 use NZB::Binsearch;
 use NZB::Check;
 use NZB::Common;
 use WWW::Mechanize::GZip;
 
-my %CFG;
-eval `cat $ENV{HOME}/.nzb-collect` || die "could not slurp in $ENV{HOME}/.nzb-collect: $!";
+sub parseCMDL # {{{1
+{
+	my $config = $ENV{HOME} . '/.nzb-collect';
+	my $help=0;
+
+	my $age;
+	my $debug;
+	my $nzbdir;
+	my $speed;
+	my $wrapper;
+
+	my $result = GetOptions(
+		"age=i"     => \$age,
+		"config=s"  => \$config,
+		"debug!"    => \$debug,
+		"dir=s"     => \$nzbdir,
+		"help!"     => \$help,
+		"speed=i"   => \$speed,
+		"wrapper=s" => \$wrapper,
+	);
+
+	if ($help) {
+		print $0 . ': <OPTIONS>' . "\n";
+		print "    --age:    TODO\n";
+		print "    --config: filename of configuration-file\n";
+		print "    --debug:  TODO\n";
+		print "    --dir:    TODO\n";
+		print "    --help:   pritn this help\n";
+		print "    --speed:  TODO\n";
+		exit 0;
+	}
+
+	my %CFG;
+	eval `cat $config` || die "could not slurp in $config: $!";
+
+	# overriding config values by commandline values (won't be saved)
+	if (defined $age)    { $CFG{'age'}    = $age;    }
+	if (defined $debug)  { $CFG{'debug'}  = $debug;  }
+	if (defined $nzbdir) { $CFG{'nzbdir'} = $nzbdir; }
+	if (defined $speed)  { $CFG{'speed'}  = $speed;  }
+
+	return %CFG;
+} # }}}1
+
+my %CFG = parseCMDL();
 
 my $END     = str2time(time2str("%Y-%m-%d", time()));
 my $START   = $END - ($CFG{'age'} * 86400);
@@ -25,6 +69,9 @@ $WWW->agent_alias('Windows IE 6');
 
 NZB::Check->debug($CFG{'debug'});
 NZB::Check->net_speed($CFG{'speed'});
+if (defined $CFG{'wrapper'}) {
+	NZB::Check->nzb($CFG{'wrapper'});
+}
 
 my %bp = map { $_ => 1 } @{$CFG{'blacklist'}};
 

@@ -1,8 +1,9 @@
 %CFG = (
-	'age'    => 10,
-	'debug'  => 1,
-	'nzbdir' => 'nzbdata',
-	'speed'  => 1000, # kb/s
+	'age'     => 10,
+	'debug'   => 1,
+	'nzbdir'  => 'nzbdata',
+	'speed'   => 1000, # kb/s
+	'wrapper' => 'nzb_wrapper.sh',
 
 	# list of posters, we don't want nzbs from
 	'blacklist' => 

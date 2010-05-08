@@ -16,10 +16,11 @@ use NZB::Common;
 
 File::Temp->safe_level(File::Temp::HIGH);
 
-my $DEBUG     = 0;
-my $NET_SPEED = 10 * 1000; # 10 kb/s
-my $RAR_BIN   = 'unrar';
-my $TMP_DIR   = File::Temp->newdir(File::Spec->tmpdir() . '/nzb_XXXXX', UNLINK => 1);
+my $DEBUG       = 0;
+my $NET_SPEED   = 10 * 1000; # 10 kb/s
+my $NZB_WRAPPER = dirname($0) . '/nzb_wrapper.sh';
+my $RAR_BIN     = 'unrar';
+my $TMP_DIR     = File::Temp->newdir(File::Spec->tmpdir() . '/nzb_XXXXX', UNLINK => 1);
 
 sub checkNZB #{{{1
 {
@@ -138,10 +139,9 @@ sub getFirstRAR #{{{1
 			my $absFile = File::Spec->rel2abs($firstNZB);
 
 			# download $firstNZB
-			my $wrapper = dirname($0) . '/nzb_wrapper.sh';
-			die 'no \'' . $wrapper . '\' available' unless -e $wrapper;
+			die 'no \'' . $NZB_WRAPPER . '\' available' unless -e $NZB_WRAPPER;
 
-			`$wrapper $TMP_DIR $absFile > /dev/null 2> /dev/null`;
+			`$NZB_WRAPPER $TMP_DIR $absFile > /dev/null 2> /dev/null`;
 			exit 0;
 		} else {
 			# give the child time to download the nzb (factor 2 is
@@ -162,8 +162,9 @@ sub getFirstRAR #{{{1
 	}
 } #}}}1
 
-sub debug     { my($self, $debug) = @_; $DEBUG     = $debug; }
-sub net_speed { my($self, $speed) = @_; $NET_SPEED = $speed; }
-sub rar       { my($self, $rar  ) = @_; $RAR_BIN   = $rar  ; }
+sub debug     { my($self, $debug) = @_; $DEBUG       = $debug; }
+sub net_speed { my($self, $speed) = @_; $NET_SPEED   = $speed; }
+sub nzb       { my($self, $nzb  ) = @_; $NZB_WRAPPER = $nzb  ; }
+sub rar       { my($self, $rar  ) = @_; $RAR_BIN     = $rar  ; }
 
 1;
