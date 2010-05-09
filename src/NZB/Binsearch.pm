@@ -5,9 +5,9 @@ package NZB::Binsearch;
 use strict;
 use warnings FATAL => 'all';
 
-use WWW::Mechanize::GZip;
+use WWW::Mechanize;
 
-my $WWW = WWW::Mechanize::GZip->new();
+my $WWW = WWW::Mechanize->new();
 $WWW->agent_alias('Windows IE 6');
 
 sub downloadNZB #{{{1

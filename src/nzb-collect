@@ -3,8 +3,6 @@
 use strict;
 use warnings FATAL => 'all';
 
-use lib '../lib'; # FIXME
-
 use Date::Format;
 use Date::Parse;
 use File::Basename;
@@ -13,7 +11,7 @@ use Getopt::Long;
 use NZB::Binsearch;
 use NZB::Check;
 use NZB::Common;
-use WWW::Mechanize::GZip;
+use WWW::Mechanize;
 
 sub parseCMDL # {{{1
 {
@@ -48,7 +46,11 @@ sub parseCMDL # {{{1
 	}
 
 	my %CFG;
-	eval `cat $config` || die "could not slurp in $config: $!";
+	# read in $config file
+	open(FILE, $config) || die "could not open $config: $!";
+	my $content; { local $/ = undef; $content = <FILE> }
+	close(FILE);
+	eval $content || die "could not slurp in $config: $!";
 
 	# overriding config values by commandline values (won't be saved)
 	if (defined $age)    { $CFG{'age'}    = $age;    }
@@ -63,7 +65,7 @@ my %CFG = parseCMDL();
 
 my $END     = str2time(time2str("%Y-%m-%d", time()));
 my $START   = $END - ($CFG{'age'} * 86400);
-my $WWW     = WWW::Mechanize::GZip->new();
+my $WWW     = WWW::Mechanize->new();
 
 $WWW->agent_alias('Windows IE 6');
 
