@@ -25,14 +25,20 @@ my $TMP_DIR     = File::Temp->newdir(File::Spec->tmpdir() . '/nzb_XXXXX', UNLINK
 sub checkNZB #{{{1
 {
 	my ($self, $nzb,  %blacklist) = @_;
-
+	
 	# nzb from blacklisted poster
 	if (defined $blacklist{$nzb->{'poster'}}) {
 		if ($DEBUG) { print STDERR "blacklist\n"; }
 		return 0;
 	}
 
-	#  password and rar in rar
+	# binsearch says this is a password protected nzb 
+	if ($nzb->{'password'}) {
+		if ($DEBUG) { print STDERR "password (binsearch)\n"; }
+		return 0;
+	}
+
+	# password and rar in rar
 	my $rar = $self->getFirstRAR($nzb);
 	if (! -e $rar) {
 		# no rar to check => fail

@@ -57,13 +57,18 @@ sub searchNZB #{{{1
 				\<span\ class=\"s\"\>([^<]+).*?          # subject
 				\>\ size:\ ([^,]*)                       # size
 				,\ parts\ available:.*? (\d+)\ \/\ (\d+) # parts_available parts_complete
-				.*([.*requires password.*])?             # password required
+				(.*\[<font color="red">requires\ password<\/font>\])?          # password_required
 				.*>([^<]+)<\/a><td><a                    # poster
 				//mxi
 			)
 			{
-				my $password = ($6 =~ /requires password/) ? 1 : 0;
-				print $1 . ' ' . $password . '\n';
+				my $password = 0;
+				print $1 . '< >' . $2 . '< >' . $3 . '< >' . $4 . '< >' . $5 . '< >' . $6 . '< >' . $7 . "<\n";
+				if (defined $6) {
+					$password = 1;
+				print $6 . "\n";
+				}
+				print $1 . ' ' . $password . "\n";
 				if ($4 == $5) {
 					my $nzb = { id => $1, subject => $2, size => $3, password=> $password, poster => $7 };
 					push (@nzbs, $nzb);
