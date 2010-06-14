@@ -93,6 +93,11 @@ for my $serie (@{$CFG{'series'}}) {
 			my $episode  = $2;
 			my $released = $3;
 			$released =~ s# #/#g;
+			my @dateparts = split(/\//,$released);
+			if ($dateparts[2] < 100) {
+				$dateparts[2] += 2000;
+			}
+			$released = join('/', @dateparts);
 			$released = str2time($released);
 
 			if (($START <= $released) && ($released <= $END)) {
