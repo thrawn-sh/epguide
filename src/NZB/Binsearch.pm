@@ -51,24 +51,23 @@ sub searchNZB #{{{1
 		my $data = $WWW->content;
 		while ( $data =~ s/(name=\"\d{8,}\".*?)<input\ //xmsi ) {
 			my $line = $1;
+			print $line . "\n";
+			exit 42;
 			while (
 				$line =~ s/
 				\"(\d{8,})\".*?                          # id
 				\<span\ class=\"s\"\>([^<]+).*?          # subject
 				\>\ size:\ ([^,]*)                       # size
 				,\ parts\ available:.*? (\d+)\ \/\ (\d+) # parts_available parts_complete
-				(.*\[<font color="red">requires\ password<\/font>\])?          # password_required
+				(.*requires\ password.*)?                # password_required
 				.*>([^<]+)<\/a><td><a                    # poster
 				//mxi
 			)
 			{
 				my $password = 0;
-				print $1 . '< >' . $2 . '< >' . $3 . '< >' . $4 . '< >' . $5 . '< >' . $6 . '< >' . $7 . "<\n";
 				if (defined $6) {
 					$password = 1;
-				print $6 . "\n";
 				}
-				print $1 . ' ' . $password . "\n";
 				if ($4 == $5) {
 					my $nzb = { id => $1, subject => $2, size => $3, password=> $password, poster => $7 };
 					push (@nzbs, $nzb);
