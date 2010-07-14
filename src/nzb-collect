@@ -77,6 +77,8 @@ if (defined $CFG{'wrapper'}) {
 
 my %bp = map { $_ => 1 } @{$CFG{'blacklist'}};
 
+if ($CFG{'debug'}) { print STDERR "DEBUG is enabled\n"; }
+
 for my $serie (@{$CFG{'series'}}) {
 
 	my $url = 'http://epguides.com/' . $serie->{'id'} . '/';
