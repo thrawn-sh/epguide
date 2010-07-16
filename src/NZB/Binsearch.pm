@@ -51,8 +51,6 @@ sub searchNZB #{{{1
 		my $data = $WWW->content;
 		while ( $data =~ s/(name=\"\d{8,}\".*?)<input\ //xmsi ) {
 			my $line = $1;
-			print $line . "\n";
-			exit 42;
 			while (
 				$line =~ s/
 				\"(\d{8,})\".*?                          # id
