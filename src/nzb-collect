@@ -118,6 +118,7 @@ for my $serie (@{$CFG{'series'}}) {
 						if (NZB::Check->checkNZB($nzb, %bp)) {
 							mkpath(dirname($file));
 							NZB::Binsearch->downloadNZB($nzb, $file);
+							print 'new NZB: ' . $file . "\n";
 							last;
 						}
 					}
