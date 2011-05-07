@@ -8,6 +8,7 @@ use Date::Parse;
 use File::Basename;
 use File::Path;
 use Getopt::Long;
+use LWP::ConnCache;
 use NZB::Binsearch;
 use NZB::Check;
 use NZB::Common;
@@ -80,6 +81,7 @@ my $START   = $END - ($CFG{'age'} * 86400);
 my $WWW     = WWW::Mechanize->new();
 
 $WWW->agent_alias('Windows IE 6');
+$WWW->conn_cache(LWP::ConnCache->new)
 
 NZB::Check->debug($CFG{'debug'});
 NZB::Check->net_speed($CFG{'speed'});
