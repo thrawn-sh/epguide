@@ -21,6 +21,7 @@ sub parseCMDL # {{{1
 	my $age;
 	my $debug;
 	my $nzbdir;
+	my $output;
 	my $speed;
 	my $wrapper;
 
@@ -30,18 +31,21 @@ sub parseCMDL # {{{1
 		"debug!"    => \$debug,
 		"dir=s"     => \$nzbdir,
 		"help!"     => \$help,
+		"output=s"  => \$output,
 		"speed=i"   => \$speed,
 		"wrapper=s" => \$wrapper,
 	);
 
 	if ($help) {
 		print $0 . ': <OPTIONS>' . "\n";
-		print "    --age:    TODO\n";
-		print "    --config: filename of configuration-file\n";
-		print "    --debug:  TODO\n";
-		print "    --dir:    TODO\n";
-		print "    --help:   pritn this help\n";
-		print "    --speed:  TODO\n";
+		print "    --age:     TODO\n";
+		print "    --config:  filename of the configuration-file to read.\n";
+		print "    --debug:   TODO\n";
+		print "    --dir:     diretory to output the nzb files to.\n";
+		print "    --help:    print this help.\n";
+		print "    --output:  write progress and messages to this file (default: STDOUT).\n";
+		print "    --speed:   limit download spead to this (kb/s).\n";
+		print "    --wrapper: call thsi wrapper script for downloading.\n";
 		exit 0;
 	}
 
@@ -53,10 +57,18 @@ sub parseCMDL # {{{1
 	eval $content || die "could not slurp in $config: $!";
 
 	# overriding config values by commandline values (won't be saved)
-	if (defined $age)    { $CFG{'age'}    = $age;    }
-	if (defined $debug)  { $CFG{'debug'}  = $debug;  }
-	if (defined $nzbdir) { $CFG{'nzbdir'} = $nzbdir; }
-	if (defined $speed)  { $CFG{'speed'}  = $speed;  }
+	if (defined $age)      { $CFG{'age'}      = $age;      }
+	if (defined $debug)    { $CFG{'debug'}    = $debug;    }
+	if (defined $nzbdir)   { $CFG{'nzbdir'}   = $nzbdir;   }
+	if (defined $speed)    { $CFG{'speed'}    = $speed;    }
+	if (defined $wrapper)  { $CFG{'wrapper'}  = $wrapper;  }
+
+	if (defined $output) {
+		open(OUTPUT, ">", $output) || die "could not open $output: $!";
+		$CFG{'output'} = *OUTPUT;
+	} else {
+		$CFG{'output'} = *STDOUT;
+	}
 
 	return %CFG;
 } # }}}1
@@ -79,6 +91,7 @@ my %bp = map { $_ => 1 } @{$CFG{'blacklist'}};
 
 if ($CFG{'debug'}) { print STDERR "DEBUG is enabled\n"; }
 
+local *OUT = $CFG{'output'};
 for my $serie (@{$CFG{'series'}}) {
 
 	my $url = 'http://epguides.com/' . $serie->{'id'} . '/';
@@ -118,7 +131,7 @@ for my $serie (@{$CFG{'series'}}) {
 						if (NZB::Check->checkNZB($nzb, %bp)) {
 							mkpath(dirname($file));
 							NZB::Binsearch->downloadNZB($nzb, $file);
-							print 'new NZB: ' . $file . "\n";
+							print OUT 'new NZB: ' . $file . "\n";
 							last;
 						}
 					}
@@ -127,3 +140,4 @@ for my $serie (@{$CFG{'series'}}) {
 		}
 	}
 }
+close(OUT);
