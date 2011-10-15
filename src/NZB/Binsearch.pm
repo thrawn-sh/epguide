@@ -40,12 +40,6 @@ sub searchNZB #{{{1
 	          '&maxsize=' . $serie->{'max'} .
 	          '&q=' . $serie->{'query'} . '+' . $episode . '+HDTV';
 
-	if ($serie->{'hd'}) {
-		$url .= '+x264';
-	} else {
-		$url .= '+xvid';
-	}
-
 	$WWW->get($url);
 	if ($WWW->success) {
 		my $data = $WWW->content;
