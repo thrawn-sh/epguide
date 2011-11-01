@@ -30,15 +30,8 @@ sub downloadNZB #{{{1
 
 sub searchNZB #{{{1
 {
-	my ($self, $serie, $episode, $age) = @_;
+	my ($url) = @_;
 	my @nzbs;
-
-	my $url = 'http://binsearch.info/index.php?adv_sort=date&adv_col=on' .
-	          '&m=&max=25&adv_g=' . $serie->{'group'} .
-	          '&adv_age=' . $age .
-	          '&minsize=' . $serie->{'min'} .
-	          '&maxsize=' . $serie->{'max'} .
-	          '&q=' . $serie->{'query'} . '+' . $episode . '+HDTV';
 
 	$WWW->get($url);
 	if ($WWW->success) {
@@ -72,6 +65,40 @@ sub searchNZB #{{{1
 
 	@nzbs= sort { $a->{'id'} cmp $b->{'id'}; } @nzbs;
 	return \@nzbs;
+} #}}}1
+
+sub searchNZBMovie #{{{1
+{
+	my ($self, $movie, $group, $min, $max, $age) = @_;
+	my @nzbs;
+
+	$movie =~ s/\W+/./g;
+
+	my $url = 'http://binsearch.info/index.php?adv_sort=date&adv_col=on' .
+	          '&m=&max=25&adv_g=' . $group .
+	          '&adv_age=' . $age .
+	          '&minsize=' . $min .
+	          '&maxsize=' . $max .
+	          '&q=' . $movie;
+
+	print $url . "\n";
+
+	return searchNZB($url);
+} #}}}1
+
+sub searchNZBSerie #{{{1
+{
+	my ($self, $serie, $episode, $age) = @_;
+	my @nzbs;
+
+	my $url = 'http://binsearch.info/index.php?adv_sort=date&adv_col=on' .
+	          '&m=&max=25&adv_g=' . $serie->{'group'} .
+	          '&adv_age=' . $age .
+	          '&minsize=' . $serie->{'min'} .
+	          '&maxsize=' . $serie->{'max'} .
+	          '&q=' . $serie->{'query'} . '+' . $episode . '+HDTV';
+
+	return searchNZB($url);
 } #}}}1
 
 1;
