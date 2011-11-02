@@ -3,35 +3,210 @@
 use strict;
 use warnings FATAL => 'all';
 
+use Date::Calc qw( Add_Delta_Days Date_to_Time Today Week_of_Year );
 use Date::Format;
 use Date::Parse;
 use File::Basename;
 use File::Path;
 use Getopt::Long;
+use IMDB::Film;
 use LWP::ConnCache;
 use NZB::Binsearch;
 use NZB::Check;
 use NZB::Common;
 use WWW::Mechanize;
 
+my %CFG   = parseCMDL();
+my $WWW   = WWW::Mechanize->new();
+
+$WWW->agent_alias('Windows IE 6');
+$WWW->conn_cache(LWP::ConnCache->new);
+
+NZB::Binsearch->debug($CFG{'debug'});
+NZB::Check->debug($CFG{'debug'});
+NZB::Check->net_speed($CFG{'speed'});
+if (defined $CFG{'wrapper'}) {
+	NZB::Check->nzb($CFG{'wrapper'});
+}
+
+
+if ($CFG{'debug'}) { print STDERR "DEBUG is enabled\n"; }
+
+sub crawl_movies #{{{1 
+{
+	my ($CFG) = @_;
+
+	local *OUT = $CFG->{'output'};
+
+	my @today        = Today();
+	my %blacklist    = map { $_ => 1 } @{$CFG->{'blacklist'}};
+
+	my $genre_ratings_ref = $CFG->{'movie_genre_ratings'};
+	my $group             = $CFG->{'movie_group'};
+	my $max_size          = $CFG->{'movie_max_size'};
+	my $min_size          = $CFG->{'movie_min_size'};
+	my $minimum_rating    = $CFG->{'movie_rating'};
+	my $nzbage            = $CFG->{'nzbage'};
+	my $release_weeks     = $CFG->{'movie_release_weeks'};
+	my $search_weeks      = $CFG->{'movie_search_weeks'};
+
+	for (my $count = 0; $count <= $search_weeks; $count++) {
+		my @date         = Add_Delta_Days(@today, ($release_weeks + $count) * -7);
+		my ($week,$year) = Week_of_Year(@date);
+
+		my $url = 'http://www.movieweb.com/movies/' . $year . '/week/' . $week;
+		$WWW->get($url);
+
+		if (! $WWW->success) {
+			print STDERR "Can't retrieve $url: $!";
+		}
+
+		for (split("\n", $WWW->content())) {
+			if (/\s+<h4><a[^>]+>([^<]+)<\/a><\/h4>/) {
+				my $title = $1;
+				my $file_name = lc($title);
+				$file_name =~ s/\s+/_/g;
+				$file_name =~ s/\W//g;
+
+				my $file = $CFG->{'nzbdir'} . '/movie-' . $file_name . '.nzb';
+				if (! -e $file) {
+					my $imdb = new IMDB::Film(crit => $title, year => $year);
+					if ($imdb->status) {
+						my $genres_ref = $imdb->genres();
+						my $rating = $imdb->rating();
+						if (! defined $rating) {
+							if ($CFG->{'debug'}) { print STDERR 'No rating for "' . $title . '" => skipping' . "\n"; }
+							next;
+						}
+
+						if (isMovieAcceptable($rating, $genres_ref, $genre_ratings_ref, $minimum_rating)) {
+							if ($CFG->{'debug'}) { print STDERR '"' . $title . '"' . "\n"; }
+							my $nzbs_ref = NZB::Binsearch->searchNZBMovie($title, $group, $min_size, $max_size, $nzbage);
+
+							if ($CFG->{'debug'}) { print STDERR 'found potential ' . scalar(@$nzbs_ref) . ' nzbs' . "\n"; }
+
+							if (download($nzbs_ref, $file, \%blacklist)) {
+								print OUT 'new NZB: ' . $file . "\n";
+							} else {
+								if ($CFG->{'debug'}) { print STDERR 'no nzb found' ."\n"; }
+							}
+						} else {
+							if ($CFG->{'debug'}) { print STDERR 'Rating (' . $rating . ') of "' . $title . '" is to bad => skipping' . "\n"; }
+						}
+					} else {
+						print STDERR 'could not retrieve rating from IMDB' . $imdb->error . "\n";
+					}
+				}
+			}
+		}
+	}
+} #}}}1
+sub crawl_series #{{{1
+{
+	my ($CFG) = @_;
+
+	local *OUT = $CFG->{'output'};
+
+	my $nzbage         = $CFG->{'nzbage'};
+	my $search_weeks   = $CFG->{'series_search_weeks'};
+	my %blacklist      = map { $_ => 1 } @{$CFG->{'blacklist'}};
+
+
+	my @today          = Today();
+	my $nzb_end_date   = Date_to_Time(@today, 0, 0, 0);
+	my $nzb_start_date = Date_to_Time(Add_Delta_Days(@today, $search_weeks * -7), 0, 0, 0);
+
+	for my $serie (@{$CFG->{'series'}}) {
+		my $url = 'http://epguides.com/' . $serie->{'id'} . '/';
+		$WWW->get($url);
+
+		if (! $WWW->success) {
+			print STDERR "Can't retrieve $url: $!";
+			next;
+		}
+
+		for (split("\n", $WWW->content())) {
+			if (/\s+(\d{1,2})-(\d{1,2})\s+(?:\S+\s+){0,1}(\d{2}.\w{3}.\d{2})/) {
+				my $season   = $1;
+				my $episode  = $2;
+				my $released = $3;
+				$released =~ s# #/#g;
+				my @dateparts = split(/\//,$released);
+				if ($dateparts[2] < 100) {
+					$dateparts[2] += 2000;
+				}
+				$released = join('/', @dateparts);
+				$released = str2time($released);
+
+				if (($nzb_start_date <= $released) && ($released <= $nzb_end_date)) {
+					my $episodeID = sprintf("S%02dE%02d", $season, $episode);
+					my $file = $CFG->{'nzbdir'} . '/' . $serie->{'id'} . '_' . $episodeID;
+					if ($serie->{'hd'}) {
+						$file .= '-HD';
+					}
+					$file .= '.nzb';
+
+					if (! -e $file) {
+						if ($CFG->{'debug'}) { print STDERR $serie->{'id'} . ': ' . $episodeID . ($serie->{'hd'} ? '-HD' : '') ."\n"; }
+						my $nzbs_ref = NZB::Binsearch->searchNZBSerie($serie, $episodeID, $nzbage);
+
+						if ($CFG->{'debug'}) { print STDERR 'found potential ' . scalar(@$nzbs_ref) . ' nzbs' . "\n"; }
+
+						if (download($nzbs_ref, $file, \%blacklist)) {
+							print OUT 'new NZB: ' . $file . "\n";
+						} else {
+							if ($CFG->{'debug'}) { print STDERR 'no nzb found' ."\n"; }
+						}
+					}
+				}
+			}
+		}
+	}
+} #}}}1
+
+sub download #{{{1
+{
+	my ($nzbs_ref, $file, $blacklist) = @_;
+	
+	for my $nzb (@$nzbs_ref) {
+		if (NZB::Check->checkNZB($nzb, %$blacklist)) {
+			mkpath(dirname($file));
+			NZB::Binsearch->downloadNZB($nzb, $file);
+			return 1;
+		}
+	}
+
+	return 0;
+} #}}}1
+sub isMovieAcceptable #{{{1
+{
+	my ($movie_rating, $genres_ref, $genre_ratings_ref, $minimum_rating) = @_;
+	for my $genre (@$genres_ref) {
+		my $genre_rating = $genre_ratings_ref->{lc($genre)};
+		if (defined $genre_rating) {
+			return ($movie_rating >= $genre_rating)
+		}
+	}
+	return ($movie_rating >= $minimum_rating);
+} #}}}1
 sub parseCMDL # {{{1
 {
 	my $config = $ENV{HOME} . '/.nzb-collect';
 	my $help=0;
 
-	my $age;
 	my $debug;
+	my $nzbage;
 	my $nzbdir;
 	my $output;
 	my $speed;
 	my $wrapper;
 
 	my $result = GetOptions(
-		"age=i"     => \$age,
 		"config=s"  => \$config,
 		"debug!"    => \$debug,
 		"dir=s"     => \$nzbdir,
 		"help!"     => \$help,
+		"nzbage=i"  => \$nzbage,
 		"output=s"  => \$output,
 		"speed=i"   => \$speed,
 		"wrapper=s" => \$wrapper,
@@ -39,7 +214,7 @@ sub parseCMDL # {{{1
 
 	if ($help) {
 		print $0 . ': <OPTIONS>' . "\n";
-		print "    --age:     TODO\n";
+		print "    --nzbage:  TODO\n";
 		print "    --config:  filename of the configuration-file to read.\n";
 		print "    --debug:   TODO\n";
 		print "    --dir:     diretory to output the nzb files to.\n";
@@ -58,11 +233,11 @@ sub parseCMDL # {{{1
 	eval $content || die "could not slurp in $config: $!";
 
 	# overriding config values by commandline values (won't be saved)
-	if (defined $age)      { $CFG{'age'}      = $age;      }
-	if (defined $debug)    { $CFG{'debug'}    = $debug;    }
-	if (defined $nzbdir)   { $CFG{'nzbdir'}   = $nzbdir;   }
-	if (defined $speed)    { $CFG{'speed'}    = $speed;    }
-	if (defined $wrapper)  { $CFG{'wrapper'}  = $wrapper;  }
+	if (defined $nzbage)  { $CFG{'nzbage'}   = $nzbage;  }
+	if (defined $debug)   { $CFG{'debug'}    = $debug;   }
+	if (defined $nzbdir)  { $CFG{'nzbdir'}   = $nzbdir;  }
+	if (defined $speed)   { $CFG{'speed'}    = $speed;   }
+	if (defined $wrapper) { $CFG{'wrapper'}  = $wrapper; }
 
 	if (defined $output) {
 		open(OUTPUT, ">", $output) || die "could not open $output: $!";
@@ -74,72 +249,8 @@ sub parseCMDL # {{{1
 	return %CFG;
 } # }}}1
 
-my %CFG = parseCMDL();
-
-my $END     = str2time(time2str("%Y-%m-%d", time()));
-my $START   = $END - ($CFG{'age'} * 86400);
-my $WWW     = WWW::Mechanize->new();
-
-$WWW->agent_alias('Windows IE 6');
-$WWW->conn_cache(LWP::ConnCache->new);
-
-NZB::Check->debug($CFG{'debug'});
-NZB::Check->net_speed($CFG{'speed'});
-if (defined $CFG{'wrapper'}) {
-	NZB::Check->nzb($CFG{'wrapper'});
-}
-
-my %bp = map { $_ => 1 } @{$CFG{'blacklist'}};
-
-if ($CFG{'debug'}) { print STDERR "DEBUG is enabled\n"; }
+crawl_series(\%CFG);
+#crawl_movies(\%CFG);
 
 local *OUT = $CFG{'output'};
-for my $serie (@{$CFG{'series'}}) {
-
-	my $url = 'http://epguides.com/' . $serie->{'id'} . '/';
-	$WWW->get($url);
-
-	if (! $WWW->success) {
-		print STDERR "Can't retrieve $url: $!";
-		next;
-	}
-
-	for (split("\n", $WWW->content())) {
-		if (/\s+(\d{1,2})-(\d{1,2})\s+(?:\S+\s+){0,1}(\d{2}.\w{3}.\d{2})/) {
-			my $season   = $1;
-			my $episode  = $2;
-			my $released = $3;
-			$released =~ s# #/#g;
-			my @dateparts = split(/\//,$released);
-			if ($dateparts[2] < 100) {
-				$dateparts[2] += 2000;
-			}
-			$released = join('/', @dateparts);
-			$released = str2time($released);
-
-			if (($START <= $released) && ($released <= $END)) {
-				my $episodeID = sprintf("S%02dE%02d", $season, $episode);
-				my $nzbs_ref = NZB::Binsearch->searchNZB($serie, $episodeID, $CFG{'age'});
-
-				my $file = $CFG{'nzbdir'} . '/' . $serie->{'id'} . '_' . $episodeID;
-				if ($serie->{'hd'}) {
-					$file .= '-HD';
-				}
-				$file .= '.nzb';
-
-				if (! -e $file) {
-					for my $nzb (@$nzbs_ref) {
-						if ($CFG{'debug'}) { print STDERR $serie->{'id'} . ': ' . $episodeID . ($serie->{'hd'} ? '-HD' : '') ."\n"; }
-						if (NZB::Check->checkNZB($nzb, %bp)) {
-							mkpath(dirname($file));
-							NZB::Binsearch->downloadNZB($nzb, $file);
-							print OUT 'new NZB: ' . $file . "\n";
-							last;
-						}
-					}
-				}
-			}
-		}
-	}
-}
 close(OUT);
