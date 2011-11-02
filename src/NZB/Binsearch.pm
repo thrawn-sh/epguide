@@ -10,6 +10,8 @@ use WWW::Mechanize;
 my $WWW = WWW::Mechanize->new();
 $WWW->agent_alias('Windows IE 6');
 
+my $DEBUG       = 0;
+
 sub downloadNZB #{{{1
 {
 	my ($self, $nzb, $file) = @_;
@@ -31,6 +33,9 @@ sub downloadNZB #{{{1
 sub searchNZB #{{{1
 {
 	my ($url) = @_;
+
+	if ($DEBUG) { print STDERR $url . "\n"; }
+
 	my @nzbs;
 
 	$WWW->get($url);
@@ -75,13 +80,11 @@ sub searchNZBMovie #{{{1
 	$movie =~ s/\W+/+/g;
 
 	my $url = 'http://binsearch.info/index.php?adv_sort=date&adv_col=on' .
-	          '&m=&max=25&adv_g=' . $group .
+	          '&m=&max=250&adv_g=' . $group .
 	          '&adv_age=' . $age .
 	          '&minsize=' . $min .
 	          '&maxsize=' . $max .
 	          '&q=' . $movie;
-
-	print $url . "\n";
 
 	return searchNZB($url);
 } #}}}1
@@ -92,7 +95,7 @@ sub searchNZBSerie #{{{1
 	my @nzbs;
 
 	my $url = 'http://binsearch.info/index.php?adv_sort=date&adv_col=on' .
-	          '&m=&max=25&adv_g=' . $serie->{'group'} .
+	          '&m=&max=250&adv_g=' . $serie->{'group'} .
 	          '&adv_age=' . $age .
 	          '&minsize=' . $serie->{'min'} .
 	          '&maxsize=' . $serie->{'max'} .
@@ -100,5 +103,7 @@ sub searchNZBSerie #{{{1
 
 	return searchNZB($url);
 } #}}}1
+
+sub debug { my($self, $debug) = @_; $DEBUG = $debug; }
 
 1;
