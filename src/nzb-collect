@@ -30,7 +30,7 @@ if (defined $CFG{'wrapper'}) {
 }
 
 
-if ($CFG{'debug'}) { print STDERR "DEBUG is enabled\n"; }
+print STDERR "DEBUG is enabled\n" if $CFG{'debug'};
 
 sub crawl_movies #{{{1 
 {
@@ -75,23 +75,23 @@ sub crawl_movies #{{{1
 						my $genres_ref = $imdb->genres();
 						my $rating = $imdb->rating();
 						if (! defined $rating) {
-							if ($CFG->{'debug'}) { print STDERR 'No rating for "' . $title . '" => skipping' . "\n"; }
+							print STDERR 'No rating for "' . $title . '" => skipping' . "\n" if $CFG->{'debug'};
 							next;
 						}
 
 						if (isMovieAcceptable($rating, $genres_ref, $genre_ratings_ref, $minimum_rating)) {
-							if ($CFG->{'debug'}) { print STDERR '"' . $title . '"' . "\n"; }
+							print STDERR '"' . $title . '"' . "\n" if $CFG->{'debug'};
 							my $nzbs_ref = NZB::Binsearch->searchNZBMovie($title, $group, $min_size, $max_size, $nzbage);
 
-							if ($CFG->{'debug'}) { print STDERR 'found potential ' . scalar(@$nzbs_ref) . ' nzbs' . "\n"; }
+							print STDERR 'found potential ' . scalar(@$nzbs_ref) . ' nzbs' . "\n" if $CFG->{'debug'};
 
 							if (download($nzbs_ref, $file, \%blacklist)) {
 								print OUT 'new NZB: ' . $file . "\n";
 							} else {
-								if ($CFG->{'debug'}) { print STDERR 'no nzb found' ."\n"; }
+								print STDERR 'no nzb found' ."\n" if $CFG->{'debug'};
 							}
 						} else {
-							if ($CFG->{'debug'}) { print STDERR 'Rating (' . $rating . ') of "' . $title . '" is to bad => skipping' . "\n"; }
+							print STDERR 'Rating (' . $rating . ') of "' . $title . '" is to bad => skipping' . "\n" if $CFG->{'debug'};
 						}
 					} else {
 						print STDERR 'could not retrieve rating from IMDB' . $imdb->error . "\n";
@@ -147,15 +147,15 @@ sub crawl_series #{{{1
 					$file .= '.nzb';
 
 					if (! -e $file) {
-						if ($CFG->{'debug'}) { print STDERR $serie->{'id'} . ': ' . $episodeID . ($serie->{'hd'} ? '-HD' : '') ."\n"; }
+						print STDERR $serie->{'id'} . ': ' . $episodeID . ($serie->{'hd'} ? '-HD' : '') ."\n"  if $CFG->{'debug'};
 						my $nzbs_ref = NZB::Binsearch->searchNZBSerie($serie, $episodeID, $nzbage);
 
-						if ($CFG->{'debug'}) { print STDERR 'found potential ' . scalar(@$nzbs_ref) . ' nzbs' . "\n"; }
+						print STDERR 'found potential ' . scalar(@$nzbs_ref) . ' nzbs' . "\n" if $CFG->{'debug'};
 
 						if (download($nzbs_ref, $file, \%blacklist)) {
 							print OUT 'new NZB: ' . $file . "\n";
 						} else {
-							if ($CFG->{'debug'}) { print STDERR 'no nzb found' ."\n"; }
+							print STDERR 'no nzb found' ."\n" if $CFG->{'debug'};
 						}
 					}
 				}
@@ -249,8 +249,15 @@ sub parseCMDL # {{{1
 	return %CFG;
 } # }}}1
 
-crawl_series(\%CFG);
-#crawl_movies(\%CFG);
+if ($CFG{'series_search_enabled'}) {
+	print STDERR 'searching for series' . "\n" if $CFG{'debug'};
+	crawl_series(\%CFG);
+}
+
+if ($CFG{'movie_search_enabled'}) {
+	print STDERR 'searching for movies' . "\n" if $CFG{'debug'};
+	crawl_movies(\%CFG);
+}
 
 local *OUT = $CFG{'output'};
 close(OUT);
