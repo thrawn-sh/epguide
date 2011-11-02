@@ -72,7 +72,7 @@ sub searchNZBMovie #{{{1
 	my ($self, $movie, $group, $min, $max, $age) = @_;
 	my @nzbs;
 
-	$movie =~ s/\W+/./g;
+	$movie =~ s/\W+/+/g;
 
 	my $url = 'http://binsearch.info/index.php?adv_sort=date&adv_col=on' .
 	          '&m=&max=25&adv_g=' . $group .
