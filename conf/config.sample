@@ -1,22 +1,48 @@
 %CFG = (
+
+	#
+	# GENERAL
+	#
+
 	'age'     => 10,
-	'debug'   => 1,
+	'debug'   => 0,
 	'nzbdir'  => 'nzbdata',
 	'speed'   => 1000, # kb/s
 	'wrapper' => 'nzb_wrapper.sh',
 
 	# list of posters, we don't want nzbs from
-	'blacklist' => 
+	'blacklist' =>
 		[
 		],
+
+	#
+	# SERIES
+	#
 
 	# id    = folder name on http://epguides.com/
 	# query = series names to search for on http://binsearch.info/
 	# group = newsgroup to search for posts
-	# min   = minimal size of nzb collection
-	# max   = maximal size of nzb collection
+	# min   = minimal size of nzb collection (MB)
+	# max   = maximal size of nzb collection (MB)
 	# hd    = search for x264 or xvid content
-	'series' => 
+	'series' =>
 		[
 		]
+
+	#
+	# MOVIES
+	#
+
+	# genre   = imdb genre (lowercase) [full list at http://www.imdb.com/genre/]
+	# minimum = minimum rating for this genre
+	'movie_genre_ratings' =>
+		{
+		},
+
+	'movie_group'         => 'alt.binaries.boneless',
+	'movie_max_size'      => 5000,
+	'movie_min_size'      => 1000,
+	'movie_rating'        => 6,
+	'movie_release_weeks' => 24,
+	'movie_search_weeks'  => 4,
 );
