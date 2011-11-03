@@ -6,9 +6,11 @@ use strict;
 use warnings FATAL => 'all';
 
 use WWW::Mechanize;
+use LWP::ConnCache;
 
 my $WWW = WWW::Mechanize->new();
 $WWW->agent_alias('Windows IE 6');
+$WWW->conn_cache(LWP::ConnCache->new)
 
 my $DEBUG       = 0;
 
@@ -29,7 +31,6 @@ sub downloadNZB #{{{1
 		print STDERR "Can't retrieve $url: $!";
 	}
 } #}}}1
-
 sub searchNZB #{{{1
 {
 	my ($url) = @_;
@@ -71,7 +72,6 @@ sub searchNZB #{{{1
 	@nzbs= sort { $a->{'id'} cmp $b->{'id'}; } @nzbs;
 	return \@nzbs;
 } #}}}1
-
 sub searchNZBMovie #{{{1
 {
 	my ($self, $movie, $group, $min, $max, $age) = @_;
@@ -88,7 +88,6 @@ sub searchNZBMovie #{{{1
 
 	return searchNZB($url);
 } #}}}1
-
 sub searchNZBSerie #{{{1
 {
 	my ($self, $serie, $episode, $age) = @_;
