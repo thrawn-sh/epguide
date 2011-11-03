@@ -8,6 +8,7 @@ use Date::Format;
 use Date::Parse;
 use File::Basename;
 use File::Path;
+use File::stat;
 use Getopt::Long;
 use IMDB::Film;
 use LWP::ConnCache;
@@ -87,6 +88,8 @@ sub crawl_movies #{{{1
 
 							if (download($nzbs_ref, $file, \%blacklist)) {
 								print OUT 'new NZB: ' . $file . "\n";
+								print OUT "\t" . 'genres: ' . @$genres_ref . "\n";
+								print OUT "\t" . 'rating: ' . $rating . "\n";
 							} else {
 								print STDERR 'no nzb found' ."\n" if $CFG->{'debug'};
 							}
@@ -164,6 +167,27 @@ sub crawl_series #{{{1
 	}
 } #}}}1
 
+sub cleanup #{{{1
+{
+	my ($CFG) = @_;
+
+	my @today        = Today();
+	my $search_weeks = ($CFG->{'series_search_weeks'}, $CFG->{'movie_search_weeks'})[$CFG->{'series_search_weeks'} < $CFG->{'movie_search_weeks'}];
+	my $keep_date    = Date_to_Time(Add_Delta_Days(@today, $search_weeks * 2 * -7), 0, 0, 0);
+
+	my $dir = ${CFG}->{'nzbdir'};
+	opendir(DIR, $dir) or die $!;
+	while (my $file = readdir(DIR)) {
+		if ($file =~ m/.+\.nzb$/) {
+			my $sb = stat($dir . '/' . $file);
+			if ($sb->mtime < $keep_date) {
+				print 'cleaning old nzb: ' . $file . "\n" if $CFG->{'debug'};
+				unlink($dir . '/' . $file);
+			}
+		}
+	}
+	closedir(DIR);
+} #}}}1
 sub download #{{{1
 {
 	my ($nzbs_ref, $file, $blacklist) = @_;
@@ -258,6 +282,8 @@ if ($CFG{'movie_search_enabled'}) {
 	print STDERR 'searching for movies' . "\n" if $CFG{'debug'};
 	crawl_movies(\%CFG);
 }
+
+cleanup(\%CFG);
 
 local *OUT = $CFG{'output'};
 close(OUT);
