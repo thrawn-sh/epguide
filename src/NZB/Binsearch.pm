@@ -10,7 +10,7 @@ use LWP::ConnCache;
 
 my $WWW = WWW::Mechanize->new();
 $WWW->agent_alias('Windows IE 6');
-$WWW->conn_cache(LWP::ConnCache->new)
+$WWW->conn_cache(LWP::ConnCache->new);
 
 my $DEBUG       = 0;
 
