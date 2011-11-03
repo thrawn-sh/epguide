@@ -88,7 +88,11 @@ sub crawl_movies #{{{1
 
 							if (download($nzbs_ref, $file, \%blacklist)) {
 								print OUT 'new NZB: ' . $file . "\n";
-								print OUT "\t" . 'genres: ' . @$genres_ref . "\n";
+								print OUT "\t" . 'genres:';
+								for my $genre (@$genres_ref) {
+									print OUT ' ' . $genre;
+								}
+								print OUT "\n";
 								print OUT "\t" . 'rating: ' . $rating . "\n";
 							} else {
 								print STDERR 'no nzb found' ."\n" if $CFG->{'debug'};
