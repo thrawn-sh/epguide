@@ -219,7 +219,9 @@ sub isMovieAcceptable #{{{1
 	for my $genre (@$genres_ref) {
 		my $genre_rating = $genre_ratings_ref->{lc($genre)};
 		if (defined $genre_rating) {
-			return ($movie_rating >= $genre_rating)
+			if ($movie_rating >= $genre_rating) {
+				return 1;
+			}
 		}
 	}
 	return ($movie_rating >= $minimum_rating);
