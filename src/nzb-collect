@@ -10,11 +10,13 @@ use File::Basename;
 use File::Path;
 use File::stat;
 use Getopt::Long;
-use IMDB::Film;
+use JSON;
 use LWP::ConnCache;
+use LWP::Simple;
 use NZB::Binsearch;
 use NZB::Check;
 use NZB::Common;
+use URI::Escape;
 use WWW::Mechanize;
 
 my %CFG   = parseCMDL();
@@ -71,16 +73,21 @@ sub crawl_movies #{{{1
 
 				my $file = $CFG->{'nzbdir'} . '/movie-' . $file_name . '.nzb';
 				if (! -e $file) {
-					my $imdb = new IMDB::Film(crit => $title, year => $year);
-					if ($imdb->status) {
-						my $genres_ref = $imdb->genres();
-						my $rating = $imdb->rating();
+					my $url = 'http://www.imdbapi.com/?t=' . uri_escape($title) . '&y=' . $year;
+					my $content = get($url);
+					if (defined $content) {
+						my $json = JSON->new->allow_nonref;
+						my $imdb = $json->decode($content);
+
+						my @genres = split(/,/, $imdb->{'Genre'});
+						my $rating = $imdb->{'Rating'};
+
 						if (! defined $rating) {
 							print STDERR 'No rating for "' . $title . '" => skipping' . "\n" if $CFG->{'debug'};
 							next;
 						}
 
-						if (isMovieAcceptable($rating, $genres_ref, $genre_ratings_ref, $minimum_rating)) {
+						if (isMovieAcceptable($rating, \@genres, $genre_ratings_ref, $minimum_rating)) {
 							print STDERR '"' . $title . '"' . "\n" if $CFG->{'debug'};
 							my $nzbs_ref = NZB::Binsearch->searchNZBMovie($title, $group, $min_size, $max_size, $nzbage);
 
@@ -89,7 +96,7 @@ sub crawl_movies #{{{1
 							if (download($nzbs_ref, $file, \%blacklist)) {
 								print OUT 'new NZB: ' . $file . "\n";
 								print OUT "\t" . 'genres:';
-								for my $genre (@$genres_ref) {
+								for my $genre (@genres) {
 									print OUT ' ' . $genre;
 								}
 								print OUT "\n";
@@ -101,7 +108,7 @@ sub crawl_movies #{{{1
 							print STDERR 'Rating (' . $rating . ') of "' . $title . '" is to bad => skipping' . "\n" if $CFG->{'debug'};
 						}
 					} else {
-						print STDERR 'could not retrieve rating from IMDB' . $imdb->error . "\n";
+						print STDERR 'could not retrieve rating from IMDB API' . "\n";
 					}
 				}
 			}
