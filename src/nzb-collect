@@ -79,7 +79,7 @@ sub crawl_movies #{{{1
 						my $json = JSON->new->allow_nonref;
 						my $imdb = $json->decode($content);
 
-						my @genres = split(/,/, $imdb->{'Genre'});
+						my @genres = split(/, /, $imdb->{'Genre'});
 						my $rating = $imdb->{'Rating'};
 
 						if ((! defined $rating) || (lc($rating) eq "n/a")) {
