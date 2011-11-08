@@ -79,7 +79,10 @@ sub crawl_movies #{{{1
 						my $json = JSON->new->allow_nonref;
 						my $imdb = $json->decode($content);
 
-						my @genres = split(/, /, $imdb->{'Genre'});
+						my @genres = ();
+						if (defined $imdb->{'Genre'}) {
+							@genres = split(/, /, $imdb->{'Genre'});
+						}
 						my $rating = $imdb->{'Rating'};
 
 						if ((! defined $rating) || (lc($rating) eq "n/a")) {
@@ -101,6 +104,10 @@ sub crawl_movies #{{{1
 								}
 								print OUT "\n";
 								print OUT "\t" . 'rating: ' . $rating . "\n";
+								if (defined $imdb->{'ID'}) {
+									print OUT "\t" . '   url: http://http://www.imdb.com/title/' . $imdb->{'ID'} . '/' . "\n";
+								}
+								print OUT "\n";
 							} else {
 								print STDERR 'no nzb found' ."\n" if $CFG->{'debug'};
 							}
