@@ -82,7 +82,7 @@ sub crawl_movies #{{{1
 						my @genres = split(/,/, $imdb->{'Genre'});
 						my $rating = $imdb->{'Rating'};
 
-						if ((! defined $rating) || (lc($rating) ne "n/a")) {
+						if ((! defined $rating) || (lc($rating) eq "n/a")) {
 							print STDERR 'No rating for "' . $title . '" => skipping' . "\n" if $CFG->{'debug'};
 							next;
 						}
