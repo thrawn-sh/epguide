@@ -51,7 +51,6 @@ sub checkNZB #{{{1
 	# -p- : don't ask for password
 	my @bare_files = `"$RAR_BIN" lb -p- "$rar" 2> /dev/null`;
 	my @technical  = `"$RAR_BIN" lt -p- "$rar" 2> /dev/null`;
-	print STDERR "---\n";
 
 	# empty rar or encrypted headers
 	if (scalar @bare_files == 0) {
