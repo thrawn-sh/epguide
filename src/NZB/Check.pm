@@ -49,8 +49,9 @@ sub checkNZB #{{{1
 	# lt  : technical filelist
 	# lb  : list bare file names
 	# -p- : don't ask for password
-	my @bare_files = `$RAR_BIN lb -p- $rar 2> /dev/null`;
-	my @technical  = `$RAR_BIN lt -p- $rar 2> /dev/null`;
+	my @bare_files = `"$RAR_BIN" lb -p- "$rar" 2> /dev/null`;
+	my @technical  = `"$RAR_BIN" lt -p- "$rar" 2> /dev/null`;
+	print STDERR "---\n";
 
 	# empty rar or encrypted headers
 	if (scalar @bare_files == 0) {
@@ -145,9 +146,10 @@ sub getFirstRAR #{{{1
 			my $absFile = File::Spec->rel2abs($firstNZB);
 
 			# download $firstNZB
-			die 'no \'' . $NZB_WRAPPER . '\' available' unless -e $NZB_WRAPPER;
-
-			`$NZB_WRAPPER $TMP_DIR $absFile > /dev/null 2> /dev/null`;
+			die 'no "' . $NZB_WRAPPER . '" available' unless -e $NZB_WRAPPER;
+			print STDERR 'calling "' . $NZB_WRAPPER . '" with "' . $TMP_DIR . '" and "' . $absFile . '"' . "\n" if ($DEBUG);
+			`"$NZB_WRAPPER" "$TMP_DIR" "$absFile" > /dev/null 2> /dev/null`;
+			print STDERR 'done' . "\n" if ($DEBUG);
 			exit 0;
 		} else {
 			# give the child time to download the nzb (factor 2 is
