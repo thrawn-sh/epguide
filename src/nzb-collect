@@ -92,7 +92,7 @@ sub crawl_movies #{{{1
 
 						if (isMovieAcceptable($rating, \@genres, $genre_ratings_ref, $minimum_rating)) {
 							print STDERR '"' . $title . '"' . "\n" if $CFG->{'debug'};
-							my $nzbs_ref = NZB::Binsearch->searchNZBMovie($title, $group, $min_size, $max_size, $nzbage);
+							my $nzbs_ref = NZB::Binsearch->searchNZBMovie($title, $year, $group, $min_size, $max_size, $nzbage);
 
 							print STDERR 'found potential ' . scalar(@$nzbs_ref) . ' nzbs' . "\n" if $CFG->{'debug'};
 

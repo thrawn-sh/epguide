@@ -28,14 +28,14 @@ sub downloadNZB #{{{1
 		print FH $WWW->content();
 		close (FH);
 	} else {
-		print STDERR "Can't retrieve $url: $!";
+		print STDERR 'Can\'t retrieve ' . $url . ': ' . $! . "\n";
 	}
 } #}}}1
 sub searchNZB #{{{1
 {
 	my ($url) = @_;
 
-	if ($DEBUG) { print STDERR $url . "\n"; }
+	print STDERR $url . "\n" if $DEBUG;
 
 	my @nzbs;
 
@@ -66,7 +66,7 @@ sub searchNZB #{{{1
 			}
 		}
 	} else {
-		print  "Can't retrieve $url: $!";
+		print STDERR 'Can\'t retrieve ' . $url . ': ' . $! . "\n";
 	}
 
 	@nzbs= sort { $a->{'id'} cmp $b->{'id'}; } @nzbs;
@@ -74,7 +74,7 @@ sub searchNZB #{{{1
 } #}}}1
 sub searchNZBMovie #{{{1
 {
-	my ($self, $movie, $group, $min, $max, $age) = @_;
+	my ($self, $movie, $year, $group, $min, $max, $age) = @_;
 	my @nzbs;
 
 	$movie =~ s/\W+/+/g;
@@ -84,7 +84,7 @@ sub searchNZBMovie #{{{1
 	          '&adv_age=' . $age .
 	          '&minsize=' . $min .
 	          '&maxsize=' . $max .
-	          '&q=' . $movie;
+	          '&q=' . $movie . '+' . $year;
 
 	return searchNZB($url);
 } #}}}1
@@ -98,7 +98,7 @@ sub searchNZBSerie #{{{1
 	          '&adv_age=' . $age .
 	          '&minsize=' . $serie->{'min'} .
 	          '&maxsize=' . $serie->{'max'} .
-	          '&q=' . $serie->{'query'} . '+' . $episode . '+HDTV';
+	          '&q=' . $serie->{'query'} . '+' . $episode;
 
 	return searchNZB($url);
 } #}}}1
