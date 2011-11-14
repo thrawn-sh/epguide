@@ -19,14 +19,15 @@
 	# SERIES
 	#
 
-	# id    = folder name on http://epguides.com/
-	# query = series names to search for on http://binsearch.info/ (separate words by '+')
-	# group = newsgroup to search for posts
-	# min   = minimal size of nzb collection (MB)
-	# max   = maximal size of nzb collection (MB)
-	# hd    = search for x264 or xvid content
+	# id        = folder name on http://epguides.com/
+	# query     = series names to search for on http://binsearch.info/ (separate words by '+')
+	# group     = newsgroup to search for posts
+	# min       = minimal size of nzb collection (MB)
+	# threshold = size of nzb collection (MB), that determines if the series is in HD quality
+	# max       = maximal size of nzb collection (MB)
 	'series' =>
 		[
+#			{ id => '24', query => '24', group => 'alt.binaries.multimedia', min => 350, threshold => 800, max => 2000 },
 		]
 	
 	'series_search_enabled' => 1,

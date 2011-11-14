@@ -161,22 +161,24 @@ sub crawl_series #{{{1
 
 				if (($nzb_start_date <= $released) && ($released <= $nzb_end_date)) {
 					my $episodeID = sprintf("S%02dE%02d", $season, $episode);
-					my $file = $CFG->{'nzbdir'} . '/' . $serie->{'id'} . '_' . $episodeID;
-					if ($serie->{'hd'}) {
-						$file .= '-HD';
-					}
-					$file .= '.nzb';
 
-					if (! -e $file) {
-						print STDERR $serie->{'id'} . ': ' . $episodeID . ($serie->{'hd'} ? '-HD' : '') ."\n"  if $CFG->{'debug'};
-						my $nzbs_ref = NZB::Binsearch->searchNZBSerie($serie, $episodeID, $nzbage);
+					foreach my $hd (0, 1) {
+						print STDERR $serie->{'id'} . ': ' . $episodeID . ($hd ? '-HD' : '') ."\n"  if $CFG->{'debug'};
 
-						print STDERR 'found potential ' . scalar(@$nzbs_ref) . ' nzbs' . "\n" if $CFG->{'debug'};
+						my $file = $CFG->{'nzbdir'} . '/' . $serie->{'id'} . '_' . $episodeID;
+						$file .= '-HD' if $hd;
+						$file .= '.nzb';
 
-						if (download($nzbs_ref, $file, \%blacklist)) {
-							print OUT 'new NZB: ' . $file . "\n";
-						} else {
-							print STDERR 'no nzb found' ."\n" if $CFG->{'debug'};
+						if (! -e $file) {
+							my $nzbs_ref = NZB::Binsearch->searchNZBSerie($serie, $hd, $episodeID, $nzbage);
+
+							print STDERR 'found potential ' . scalar(@$nzbs_ref) . ' nzbs' . "\n" if $CFG->{'debug'};
+
+							if (download($nzbs_ref, $file, \%blacklist)) {
+								print OUT 'new NZB: ' . $file . "\n";
+							} else {
+								print STDERR 'no nzb found' ."\n" if $CFG->{'debug'};
+							}
 						}
 					}
 				}

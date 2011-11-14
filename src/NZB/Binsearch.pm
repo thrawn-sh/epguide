@@ -91,15 +91,20 @@ sub searchNZBMovie #{{{1
 } #}}}1
 sub searchNZBSerie #{{{1
 {
-	my ($self, $serie, $episode, $age) = @_;
+	my ($self, $serie, $hd, $episode, $age) = @_;
 	my @nzbs;
 
 	my $url = 'http://binsearch.info/index.php?adv_sort=date&adv_col=on' .
 	          '&m=&max=250&adv_g=' . $serie->{'group'} .
-	          '&adv_age=' . $age .
-	          '&minsize=' . $serie->{'min'} .
-	          '&maxsize=' . $serie->{'max'} .
-	          '&q=' . $serie->{'query'} . '+' . $episode;
+	          '&adv_age=' . $age;
+	if ($hd) {
+		$url .= '&minsize=' . $serie->{'threshold'} .
+		        '&maxsize=' . $serie->{'max'};
+	} else {
+		$url .= '&minsize=' . $serie->{'min'} .
+		        '&maxsize=' . $serie->{'threshold'};
+	}
+	$url .= '&q=' . $serie->{'query'} . '+' . $episode;
 
 	return searchNZB($url);
 } #}}}1
