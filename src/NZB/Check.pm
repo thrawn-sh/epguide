@@ -28,13 +28,13 @@ sub checkNZB #{{{1
 	
 	# nzb from blacklisted poster
 	if (defined $blacklist{$nzb->{'poster'}}) {
-		if ($DEBUG) { print STDERR "blacklist\n"; }
+		print STDERR 'blacklist' . "\n" if $DEBUG;
 		return 0;
 	}
 
 	# binsearch says this is a password protected nzb 
 	if ($nzb->{'password'}) {
-		if ($DEBUG) { print STDERR "password (binsearch)\n"; }
+		print STDERR 'password (binsearch)' . "\n" if $DEBUG;
 		return 0;
 	}
 
@@ -42,7 +42,7 @@ sub checkNZB #{{{1
 	my $rar = $self->getFirstRAR($nzb);
 	if (! -e $rar) {
 		# no rar to check => fail
-		if ($DEBUG) { print STDERR "no rar download\n"; }
+		print STDERR 'no rar download' . "\n" if $DEBUG;
 		return 0;
 	}
 
@@ -54,14 +54,14 @@ sub checkNZB #{{{1
 
 	# empty rar or encrypted headers
 	if (scalar @bare_files == 0) {
-		if ($DEBUG) { print STDERR "empty rar\n"; }
+		print STDERR 'empty rar' . "\n" if $DEBUG;
 		return 0;
 	}
 
 	# check for encrypted data
 	for my $line (@technical) {
 		if ($line =~ m/^\*/) {
-			if ($DEBUG) { print STDERR "encrypted rar\n"; }
+			print STDERR 'encrypted rar' . "\n" if $DEBUG;
 			return 0;
 		}
 	}
@@ -69,15 +69,14 @@ sub checkNZB #{{{1
 	# check for rar-in-rar
 	for my $file (@bare_files) {
 		if ($file =~ m/\.rar$/) {
-			if ($DEBUG) { print STDERR "rar-in-rar\n"; }
+			print STDERR 'rar-in-rar' . "\n" if $DEBUG;
 			return 0;
 		}
 	}
 
-	if ($DEBUG) { print STDERR "nzb ok\n"; }
+	print STDERR 'nzb ok' . "\n" if $DEBUG;
 	return 1;
 }#}}}1
-
 sub determineFirstRAR #{{{1
 {
 	my ($self, $files_ref) = @_;
@@ -113,7 +112,6 @@ sub determineFirstRAR #{{{1
 
 	return $first;
 } #}}}1
-
 sub getFirstRAR #{{{1
 {
 	my ($self, $nzb) = @_;
@@ -136,6 +134,8 @@ sub getFirstRAR #{{{1
 		$first->{'subject'} =~ m/\"(.+)\"/;
 		if (defined $1) {
 			$firstRAR = File::Spec->rel2abs($TMP_DIR . '/' . $1);
+		} else {
+			print STDERR $first->{'subject'} . "\n" if $DEBUG;
 		}
 
 		my $pid = fork();
@@ -146,9 +146,9 @@ sub getFirstRAR #{{{1
 
 			# download $firstNZB
 			die 'no "' . $NZB_WRAPPER . '" available' unless -e $NZB_WRAPPER;
-			print STDERR 'calling "' . $NZB_WRAPPER . '" with "' . $TMP_DIR . '" and "' . $absFile . '"' . "\n" if ($DEBUG);
+			print STDERR 'calling "' . $NZB_WRAPPER . '" with "' . $TMP_DIR . '" and "' . $absFile . '"' . "\n" if $DEBUG;
 			`"$NZB_WRAPPER" "$TMP_DIR" "$absFile" > /dev/null 2> /dev/null`;
-			print STDERR 'done' . "\n" if ($DEBUG);
+			print STDERR 'done' . "\n" if $DEBUG;
 			exit 0;
 		} else {
 			# give the child time to download the nzb (factor 2 is
