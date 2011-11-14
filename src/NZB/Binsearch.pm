@@ -5,19 +5,20 @@ package NZB::Binsearch;
 use strict;
 use warnings FATAL => 'all';
 
-use WWW::Mechanize;
+use Crypt::SSLeay;
 use LWP::ConnCache;
+use WWW::Mechanize;
 
-my $WWW = WWW::Mechanize->new();
+my $WWW = WWW::Mechanize->new(ssl_opts => { verify_hostname => 0 });
 $WWW->agent_alias('Windows IE 6');
-$WWW->conn_cache(LWP::ConnCache->new);
+#$WWW->conn_cache(LWP::ConnCache->new);
 
 my $DEBUG       = 0;
 
 sub downloadNZB #{{{1
 {
 	my ($self, $nzb, $file) = @_;
-	my $url = 'http://binsearch.info/fcgi/nzb.fcgi';
+	my $url = 'https://binsearch.info/fcgi/nzb.fcgi';
 
 	$WWW->agent_alias('Windows IE 6');
 	$WWW->default_header('Accept-Encoding' => 'deflate,gzip');
