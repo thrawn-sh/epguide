@@ -153,6 +153,27 @@ sub getFirstRAR #{{{1
 			print STDERR 'calling "' . $NZB_WRAPPER . '" with "' . $TMP_DIR . '" and "' . $absFile . '"' . "\n" if $DEBUG;
 			`"$NZB_WRAPPER" "$TMP_DIR" "$absFile" > /dev/null 2> /dev/null`;
 			print STDERR 'done' . "\n" if $DEBUG;
+			# sometimes the downloaded file name does not match our
+			# expectaion, so we have to rename the file
+			if (! -e $firstRAR) {
+				print STDERR 'missing expected file "' . $firstRAR . '"' . "\n" if $DEBUG;
+
+				opendir(DIR, $TMP_DIR);
+				while(my $file = readdir(DIR)) {
+					my $fqfn = $TMP_DIR . '/' . $file;
+					print STDERR 'checking "' . $fqfn . '"' . "\n" if $DEBUG;
+
+					# only process files
+					next if (! -f $fqfn);
+					# skip all nzb files
+					next if ($file =~ m/\.nzb$/);
+
+					print STDERR 'renaming "' . $fqfn . '" to "' . $firstRAR . '"' . "\n" if $DEBUG;
+					rename($fqfn, $firstRAR);
+				}
+				closedir(DIR);
+			}
+
 			exit 0;
 		} else {
 			# give the child time to download the nzb (factor 2 is
