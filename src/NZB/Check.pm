@@ -55,6 +55,7 @@ sub checkNZB #{{{1
 	# empty rar or encrypted headers
 	if (scalar @bare_files == 0) {
 		print STDERR 'empty rar' . "\n" if $DEBUG;
+		unlink($rar);
 		return 0;
 	}
 
@@ -62,6 +63,7 @@ sub checkNZB #{{{1
 	for my $line (@technical) {
 		if ($line =~ m/^\*/) {
 			print STDERR 'encrypted rar' . "\n" if $DEBUG;
+			unlink($rar);
 			return 0;
 		}
 	}
@@ -70,11 +72,13 @@ sub checkNZB #{{{1
 	for my $file (@bare_files) {
 		if ($file =~ m/\.rar$/) {
 			print STDERR 'rar-in-rar' . "\n" if $DEBUG;
+			unlink($rar);
 			return 0;
 		}
 	}
 
 	print STDERR 'nzb ok' . "\n" if $DEBUG;
+	unlink($rar);
 	return 1;
 }#}}}1
 sub determineFirstRAR #{{{1
