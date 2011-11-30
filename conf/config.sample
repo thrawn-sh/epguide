@@ -16,6 +16,18 @@
 		],
 
 	#
+	# NOTIFICATIONS
+	#
+
+	# use the id for series and 'movies'
+	'notify' =>
+		{
+			'24'     => [ 'Foo <foo@example.net>', 'Bar <bar@example.net>' ],
+			'movies' => [ 'foobar@example.net' ],
+		},
+	'sender' => 'Foo Bar <foobar@example.net>',
+
+	#
 	# SERIES
 	#
 
