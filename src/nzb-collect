@@ -353,11 +353,14 @@ sub sendMails #{{{1
 {
 	my ($CFG, $id, $subject, $message) = @_;
 
+	local *OUT = $CFG->{'output'};
+
 	my $notify = $CFG->{'notify'};
 	for my $reciever (@{$notify->{$id}}) {
 		my %mail = (From => $CFG{'sender'}, To => $reciever, Subject => $subject, Message => $message);
 		sendmail(%mail) or die $Mail::Sendmail::error;
 		print STDERR $Mail::Sendmail::log if $CFG{'debug'};
+		print OUT 'mail for ' . $id . ' sent to ' . $reciever . "\n";
 	}
 }#}}}1
 
