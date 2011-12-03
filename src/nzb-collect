@@ -337,7 +337,7 @@ sub processNotifications #{{{1
 			$title =~ s/\+/ /g;
 
 			my $prefix = "Hi\n\nHave you seen, that the new episodes of $title have aired in the US? Can't wait to view them on TV.\n\n";
-			my $suffix = "\n\ncu\n\tAlex\n";
+			my $suffix = "\ncu\n\tAlex\n";
 			sendMails($CFG, $serieID, '[Notify] ' . $title, $prefix . $message . $suffix);
 		}
 	}
