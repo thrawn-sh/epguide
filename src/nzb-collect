@@ -113,10 +113,10 @@ sub crawl_movies #{{{1
 								$mail .= "\n";
 
 								print OUT "\t" . 'rating: ' . $rating . "\n";
-								$mail .= '   ' . 'Reating: ' . $rating . "\n";
+								$mail .= '   ' . 'Rating: ' . $rating . "\n";
 								if (defined $imdb->{'ID'}) {
 									print OUT "\t" . '   url: http://www.imdb.com/title/' . $imdb->{'ID'} . '/' . "\n";
-									$mail .= '   ' . 'Überblick: http://www.imdb.com/title/' . $imdb->{'ID'} . '/' . "\n"; 
+									$mail .= '   ' . 'More: http://www.imdb.com/title/' . $imdb->{'ID'} . '/' . "\n"; 
 								}
 								print OUT "\n";
 								$mail .= "\n";
