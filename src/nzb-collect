@@ -72,8 +72,9 @@ sub crawl_movies #{{{1
 				$file_name =~ s/\s+/_/g;
 				$file_name =~ s/\W//g;
 
-				my $file = $CFG->{'nzbdir'} . '/movie-' . $file_name . '.nzb';
-				if (! -e $file) {
+				my $file   = $CFG->{'nzbdir'} . '/movie-' . $file_name . '.nzb';
+				my $noFile = $CFG->{'nzbdir'} . '/.movie-' . $file_name . '.NO'; # created if rating is to bad => no more queries for this movie
+				if ((! -e $file) && (! -e $noFile)) {
 					my $url = 'http://www.imdbapi.com/?t=' . uri_escape($title) . '&y=' . $year;
 					my $content = get($url);
 					if (defined $content) {
@@ -126,6 +127,8 @@ sub crawl_movies #{{{1
 							}
 						} else {
 							print STDERR 'Rating (' . $rating . ') of "' . $title . '" is to bad => skipping' . "\n" if $CFG->{'debug'};
+							open(NO,'>' . $noFile) or die "Can't create new.txt: $!";
+							close(NO);
 						}
 					} else {
 						print STDERR 'could not retrieve rating from IMDB API' . "\n";
@@ -215,7 +218,7 @@ sub cleanup #{{{1
 	my $dir = ${CFG}->{'nzbdir'};
 	opendir(DIR, $dir) or die $!;
 	while (my $file = readdir(DIR)) {
-		if ($file =~ m/.+\.nzb$/) {
+		if (($file =~ m/.+\.nzb$/) || ($file =~ m/.+\.NO$/)) {
 			my $sb = stat($dir . '/' . $file);
 			if ($sb->mtime < $keep_date) {
 				print 'cleaning old nzb: ' . $file . "\n" if $CFG->{'debug'};
