@@ -77,8 +77,6 @@ sub searchNZB #{{{1
 sub searchNZBMovie #{{{1
 {
 	my ($self, $movie, $year, $group, $min, $max, $age) = @_;
-	my @nzbs;
-
 	$movie =~ s/\W+/+/g;
 
 	my $url = 'http://binsearch.info/index.php?adv_sort=date&adv_col=on' .
@@ -93,7 +91,6 @@ sub searchNZBMovie #{{{1
 sub searchNZBSerie #{{{1
 {
 	my ($self, $serie, $hd, $episode, $age) = @_;
-	my @nzbs;
 
 	my $url = 'http://binsearch.info/index.php?adv_sort=date&adv_col=on' .
 	          '&m=&max=250&adv_g=' . $serie->{'group'} .
