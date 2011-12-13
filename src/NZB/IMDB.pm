@@ -15,7 +15,7 @@ $WWW->conn_cache(LWP::ConnCache->new);
 $WWW->default_header('Accept-Encoding' => 'deflate,gzip');
 
 sub extract_imdb_data { # {{{1
-        my $($imdb_number) = @_;
+        my ($imdb_number) = @_;
         my $url = 'http://www.imdb.com/title/tt' . $imdb_number;
         $WWW->get($url);
 	if ($WWW->success) {
@@ -25,7 +25,7 @@ sub extract_imdb_data { # {{{1
 		my $rating = undef;
 		my $raters = undef;
 
-		for (split("\n", $w->content())) {
+		for (split("\n", $WWW->content())) {
 			# <title>Contagion (2011) - IMDb</title>
 			if (/<title>(.+) \((\d{4})\) - IMDb<\/title>/) {
 				$title = $1;
