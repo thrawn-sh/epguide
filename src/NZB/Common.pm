@@ -48,7 +48,6 @@ sub parseNZB #{{{1
 	@files = sort { $a->{'subject'} cmp $b->{'subject'}; } @files;
 	return \@files;
 }#}}}1
-
 sub writeNZB #{{{1
 {
 	my ($self, $nzbFile, $output) = @_;
