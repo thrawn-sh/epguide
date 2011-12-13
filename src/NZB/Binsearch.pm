@@ -60,8 +60,14 @@ sub searchNZB #{{{1
 				if (defined $6) {
 					$password = 1;
 				}
+
+				my $nfo = undef;
+				if (defined $7) {
+					$nfo = $BINSEARCH_URL . $7;
+				}
+
 				if ($4 == $5) {
-					my $nzb = { id => $1, subject => $2, size => $3, password=> $password, nfo => $7, poster => $8 };
+					my $nzb = { id => $1, subject => $2, size => $3, password=> $password, nfo => $nfo, poster => $8 };
 					push (@nzbs, $nzb);
 				}
 			}
@@ -73,7 +79,7 @@ sub searchNZB #{{{1
 	@nzbs= sort { $a->{'id'} cmp $b->{'id'}; } @nzbs;
 	return \@nzbs;
 } #}}}1
-sub searchNZBMovie #{{{1
+sub searchNZBQuery #{{{1
 {
 	my ($self, $query, $group, $min, $max, $age) = @_;
 	$query =~ s/\W+/+/g;
