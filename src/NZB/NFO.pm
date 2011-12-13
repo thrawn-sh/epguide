@@ -15,7 +15,8 @@ $WWW->conn_cache(LWP::ConnCache->new);
 $WWW->default_header('Accept-Encoding' => 'deflate,gzip');
 
 sub parse_imdb_nr { #{{{1
-	my ($url) = @_;
+	my ($self, $url) = @_;
+
 	$WWW->get($url);
 	if ($WWW->success) {
 		if ($WWW->content() =~ /([\w:\/\.]*imdb\.[\w]{2,3}\/[\?\.\/\w\d]+)/) {
