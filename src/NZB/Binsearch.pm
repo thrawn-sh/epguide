@@ -12,16 +12,15 @@ use WWW::Mechanize;
 my $WWW = WWW::Mechanize->new(ssl_opts => { verify_hostname => 0 });
 $WWW->agent_alias('Windows IE 6');
 #$WWW->conn_cache(LWP::ConnCache->new);
+$WWW->default_header('Accept-Encoding' => 'deflate,gzip');
 
-my $DEBUG       = 0;
+my $DEBUG         = 0;
+my $BINSEARCH_URL = 'https://www.binsearch.info';
 
 sub downloadNZB #{{{1
 {
 	my ($self, $nzb, $file) = @_;
-	my $url = 'https://www.binsearch.info/fcgi/nzb.fcgi';
-
-	$WWW->agent_alias('Windows IE 6');
-	$WWW->default_header('Accept-Encoding' => 'deflate,gzip');
+	my $url = $BINSEARCH_URL . '/fcgi/nzb.fcgi';
 
 	$WWW->post($url, { $nzb->{'id'} => 'on', action => 'nzb' });
 	if ($WWW->success) {
@@ -79,7 +78,7 @@ sub searchNZBMovie #{{{1
 	my ($self, $query, $group, $min, $max, $age) = @_;
 	$query =~ s/\W+/+/g;
 
-	my $url = 'http://binsearch.info/index.php?adv_sort=date&adv_col=on' .
+	my $url = $BINSEARCH_URL . '/index.php?adv_sort=date&adv_col=on' .
 	          '&m=&max=250&adv_g=' . $group .
 		  '&adv_nfo=on' .
 	          '&adv_age=' . $age .
@@ -93,7 +92,7 @@ sub searchNZBSerie #{{{1
 {
 	my ($self, $serie, $hd, $episode, $age) = @_;
 
-	my $url = 'http://binsearch.info/index.php?adv_sort=date&adv_col=on' .
+	my $url = $BINSEARCH_URL . '/index.php?adv_sort=date&adv_col=on' .
 	          '&m=&max=250&adv_g=' . $serie->{'group'} .
 	          '&adv_age=' . $age;
 	if ($hd) {
