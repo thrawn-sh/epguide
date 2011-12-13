@@ -74,31 +74,18 @@ sub searchNZB #{{{1
 	@nzbs= sort { $a->{'id'} cmp $b->{'id'}; } @nzbs;
 	return \@nzbs;
 } #}}}1
-sub searchNFO #{{{1
+sub searchNZBMovie #{{{1
 {
 	my ($self, $query, $group, $min, $max, $age) = @_;
 	$query =~ s/\W+/+/g;
 
 	my $url = 'http://binsearch.info/index.php?adv_sort=date&adv_col=on' .
 	          '&m=&max=250&adv_g=' . $group .
+		  '&adv_nfo=on' .
 	          '&adv_age=' . $age .
 	          '&minsize=' . $min .
 	          '&maxsize=' . $max .
 	          '&q=' . $query;
-
-	return searchNZB($url);
-} #}}}1
-sub searchNZBMovie #{{{1
-{
-	my ($self, $movie, $year, $group, $min, $max, $age) = @_;
-	$movie =~ s/\W+/+/g;
-
-	my $url = 'http://binsearch.info/index.php?adv_sort=date&adv_col=on' .
-	          '&m=&max=250&adv_g=' . $group .
-	          '&adv_age=' . $age .
-	          '&minsize=' . $min .
-	          '&maxsize=' . $max .
-	          '&q=' . $movie . '+' . $year;
 
 	return searchNZB($url);
 } #}}}1
