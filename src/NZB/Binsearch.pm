@@ -47,13 +47,13 @@ sub searchNZB #{{{1
 			my $line = $1;
 			while (
 				$line =~ s/
-				\"(\d{8,})\".*?                          # id
-				\<span\ class=\"s\"\>([^<]+).*?          # subject
-				\>\ size:\ ([^,]*)                       # size
-				,\ parts\ available:.*? (\d+)\ \/\ (\d+) # parts_available parts_complete
-				(.*requires\ password.*)?                # password_required
-                                (.*\<href=\"([^"]+viewNFO[^"]+)\")?      # nfo
-				.*>([^<]+)<\/a><td><a                    # poster
+				\"(\d{8,})\".*?                                # id
+				\<span\ class=\"s\"\>([^<]+).*?                # subject
+				\>\ size:\ ([^,]*)                             # size
+				,\ parts\ available:.*? (\d+)\ \/\ (\d+)       # parts_available parts_complete
+				(.*requires\ password.*)?                      # password_required
+				(?:.*\<a\ href=\"([^"]+viewNFO[^"&]+)[^"]*\")? # nfo
+				.*>([^<]+)<\/a><td><a                          # poster
 				//mxi
 			)
 			{
