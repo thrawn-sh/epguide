@@ -52,7 +52,7 @@ sub searchNZB #{{{1
 				\>\ size:\ ([^,]*)                       # size
 				,\ parts\ available:.*? (\d+)\ \/\ (\d+) # parts_available parts_complete
 				(.*requires\ password.*)?                # password_required
-                                .*href=\"(https?:\/\/(?:www\.)?binsearch\.info\/viewNFO\.php\?[^"]+)\" # nfo link
+                                .*\<href=\"([^"]+viewNFO[^"]+)\"         # nfo
 				.*>([^<]+)<\/a><td><a                    # poster
 				//mxi
 			)
