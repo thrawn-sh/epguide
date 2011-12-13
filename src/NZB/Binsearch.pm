@@ -52,6 +52,7 @@ sub searchNZB #{{{1
 				\>\ size:\ ([^,]*)                       # size
 				,\ parts\ available:.*? (\d+)\ \/\ (\d+) # parts_available parts_complete
 				(.*requires\ password.*)?                # password_required
+                                .*href=\"(https?:\/\/binsearch\.info\/viewNFO\.php\?[^"]+)" # nfo link
 				.*>([^<]+)<\/a><td><a                    # poster
 				//mxi
 			)
@@ -61,7 +62,7 @@ sub searchNZB #{{{1
 					$password = 1;
 				}
 				if ($4 == $5) {
-					my $nzb = { id => $1, subject => $2, size => $3, password=> $password, poster => $7 };
+					my $nzb = { id => $1, subject => $2, size => $3, password=> $password, nfo => $7 poster => $8 };
 					push (@nzbs, $nzb);
 				}
 			}
