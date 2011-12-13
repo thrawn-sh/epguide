@@ -16,7 +16,7 @@ use LWP::Simple;
 use Mail::Sendmail;
 use NZB::Binsearch;
 use NZB::Check;
-use NZB::Common;
+use NZB::NZB;
 use URI::Escape;
 use WWW::Mechanize;
 

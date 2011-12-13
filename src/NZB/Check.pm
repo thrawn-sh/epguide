@@ -12,7 +12,7 @@ use File::Basename;
 use File::Spec;
 use File::Temp;
 use NZB::Binsearch;
-use NZB::Common;
+use NZB::NZB;
 
 File::Temp->safe_level(File::Temp::HIGH);
 

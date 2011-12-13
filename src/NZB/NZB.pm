@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-package NZB::Common;
+package NZB::NZB;
 
 use strict;
 use warnings FATAL => 'all';
