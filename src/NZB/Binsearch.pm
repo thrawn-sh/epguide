@@ -18,7 +18,7 @@ my $DEBUG       = 0;
 sub downloadNZB #{{{1
 {
 	my ($self, $nzb, $file) = @_;
-	my $url = 'https://binsearch.info/fcgi/nzb.fcgi';
+	my $url = 'https://www.binsearch.info/fcgi/nzb.fcgi';
 
 	$WWW->agent_alias('Windows IE 6');
 	$WWW->default_header('Accept-Encoding' => 'deflate,gzip');
