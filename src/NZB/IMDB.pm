@@ -6,6 +6,7 @@ use strict;
 use warnings FATAL => 'all';
 
 use Crypt::SSLeay;
+use HTML::Entities;
 use LWP::ConnCache;
 use WWW::Mechanize;
 
@@ -35,7 +36,7 @@ sub extract_imdb_data($$) { # {{{1
 		for (split("\n", $WWW->content())) {
 			# <title>Contagion (2011) - IMDb</title>
 			if (/<title>(.+) \((?:.+ )?(\d{4})\) - IMDb<\/title>/) {
-				$title = $1;
+				$title = HTML::Entities::decode($1);
 				print STDERR 'title: ' . $title . "\n" if $DEBUG;
 				$year = $2;
 				print STDERR 'year: ' . $year . "\n" if $DEBUG;
@@ -52,7 +53,7 @@ sub extract_imdb_data($$) { # {{{1
 
 			# <a href="/genre/Drama" itemprop="genre">Drama</a>&nbsp;<span>|</span> <a href="/genre/Sci-Fi" itemprop="genre">Sci-Fi</a>
 			while (s{<a href=\"/genre/([^"]+)"}{}) {
-				push(@genres, $1);
+				push(@genres, HTML::Entities::decode($1));
 			}
 		}
 
