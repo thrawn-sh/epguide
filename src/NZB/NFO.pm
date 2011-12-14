@@ -13,6 +13,7 @@ my $WWW = WWW::Mechanize->new(ssl_opts => { verify_hostname => 0 });
 $WWW->agent_alias('Windows IE 6');
 $WWW->conn_cache(LWP::ConnCache->new);
 $WWW->default_header('Accept-Encoding' => 'deflate,gzip');
+$WWW->default_header('Accept-Language' => 'en');
 
 sub parse_imdb_nr($$) { #{{{1
 	my ($self, $url) = @_;
