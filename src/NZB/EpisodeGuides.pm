@@ -6,6 +6,7 @@ use strict;
 use warnings FATAL => 'all';
 
 use Date::Calc qw( Add_Delta_Days Today Date_to_Time );
+use Date::Parse;
 use LWP::ConnCache;
 use WWW::Mechanize;
 
@@ -14,7 +15,7 @@ $WWW->agent_alias('Windows IE 6');
 $WWW->conn_cache(LWP::ConnCache->new);
 $WWW->default_header('Accept-Encoding' => 'deflate,gzip');
 
-sub crawl_series($$$) { #{{{1
+sub getEpisodes($$$) { #{{{1
 	my ($self, $serie, $search_weeks) = @_;
 
 	my @episodes;
