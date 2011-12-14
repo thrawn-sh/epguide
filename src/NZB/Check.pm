@@ -122,12 +122,12 @@ sub getFirstRAR #{{{1
 	my $tmp = File::Temp->new(TEMPLATE => 'temp_XXXXX', DIR => $TMP_DIR, SUFFIX => '.nzb', UNLINK => 1);
 	NZB::Binsearch->downloadNZB($nzb, $tmp);
 
-	my $files_ref = NZB::Common->parseNZB($tmp);
+	my $files_ref = NZB::NZB->parseNZB($tmp);
 
 	my $first = $self->determineFirstRAR($files_ref);
 	if (defined $first) {
 		my $firstNZB = File::Temp->new(TEMPLATE => 'min_XXXXX', DIR => $TMP_DIR, SUFFIX => '.nzb', UNLINK => 1);
-		NZB::Common->writeNZB($first, $firstNZB);
+		NZB::NZB->writeNZB($first, $firstNZB);
 
 		my $size = 0;
 		for my $segment (@{$first->{'segments_ref'}}) {
