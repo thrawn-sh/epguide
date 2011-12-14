@@ -19,7 +19,10 @@ $WWW->default_header('Accept-Encoding' => 'deflate,gzip');
 sub extract_imdb_data($$) { # {{{1
 	my ($self, $imdb_number) = @_;
 
-	my $url = 'http://www.imdb.com/title/tt' . $imdb_number;
+	my $url = 'http://www.imdb.com/title/tt' . $imdb_number . '/';
+
+	print STDERR 'url: ' . $url . "\n" if $DEBUG;
+
 	$WWW->get($url);
 	if ($WWW->success) {
 		my $title = undef;
@@ -29,8 +32,8 @@ sub extract_imdb_data($$) { # {{{1
 		my $raters = undef;
 
 		for (split("\n", $WWW->content())) {
-			# <title>Contagion (TV 2011) - IMDb</title>
-			if (/<title>(.+) \((?:.+ )(\d{4})\) - IMDb<\/title>/) {
+			# <title>Contagion (2011) - IMDb</title>
+			if (/<title>(.+) \((?:.+ )?(\d{4})\) - IMDb<\/title>/) {
 				$title = $1;
 				print STDERR 'title: ' . $title . "\n" if $DEBUG;
 				$year = $2;
