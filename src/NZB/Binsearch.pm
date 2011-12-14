@@ -17,8 +17,7 @@ $WWW->default_header('Accept-Encoding' => 'deflate,gzip');
 my $DEBUG         = 0;
 my $BINSEARCH_URL = 'https://www.binsearch.info';
 
-sub downloadNZB #{{{1
-{
+sub downloadNZB($$$) { #{{{1
 	my ($self, $nzb, $file) = @_;
 	my $url = $BINSEARCH_URL . '/fcgi/nzb.fcgi';
 
@@ -31,8 +30,7 @@ sub downloadNZB #{{{1
 		print STDERR 'Can\'t retrieve ' . $url . ': ' . $! . "\n";
 	}
 } #}}}1
-sub searchNZB #{{{1
-{
+sub searchNZB($) { #{{{1
 	my ($url) = @_;
 
 	print STDERR $url . "\n" if $DEBUG;
@@ -79,8 +77,7 @@ sub searchNZB #{{{1
 	@nzbs= sort { $a->{'id'} cmp $b->{'id'}; } @nzbs;
 	return \@nzbs;
 } #}}}1
-sub searchNZBQuery #{{{1
-{
+sub searchNZBQuery($$$$$$) { #{{{1
 	my ($self, $query, $group, $min, $max, $age) = @_;
 	$query =~ s/\W+/+/g;
 
@@ -94,8 +91,7 @@ sub searchNZBQuery #{{{1
 
 	return searchNZB($url);
 } #}}}1
-sub searchNZBSerie #{{{1
-{
+sub searchNZBSerie($$$$$) { #{{{1
 	my ($self, $serie, $hd, $episode, $age) = @_;
 
 	my $url = $BINSEARCH_URL . '/index.php?adv_sort=date&adv_col=on' .
@@ -113,6 +109,6 @@ sub searchNZBSerie #{{{1
 	return searchNZB($url);
 } #}}}1
 
-sub debug { my($self, $debug) = @_; $DEBUG = $debug; }
+sub debug($$) { my($self, $debug) = @_; $DEBUG = $debug; }
 
 1;

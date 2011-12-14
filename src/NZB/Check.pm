@@ -22,12 +22,11 @@ my $NZB_WRAPPER = dirname($0) . '/nzb_wrapper.sh';
 my $RAR_BIN     = 'unrar';
 my $TMP_DIR     = File::Temp->newdir(File::Spec->tmpdir() . '/nzb_XXXXX', UNLINK => 1);
 
-sub checkNZB #{{{1
-{
-	my ($self, $nzb,  %blacklist) = @_;
+sub checkNZB($$$) { #{{{1
+	my ($self, $nzb,  $blacklist) = @_;
 	
 	# nzb from blacklisted poster
-	if (defined $blacklist{$nzb->{'poster'}}) {
+	if (defined $blacklist->{$nzb->{'poster'}}) {
 		print STDERR 'blacklist' . "\n" if $DEBUG;
 		return 0;
 	}
@@ -81,8 +80,7 @@ sub checkNZB #{{{1
 	unlink($rar);
 	return 1;
 }#}}}1
-sub determineFirstRAR #{{{1
-{
+sub determineFirstRAR($$) { #{{{1
 	my ($self, $files_ref) = @_;
 
 	my @rars;
@@ -116,8 +114,7 @@ sub determineFirstRAR #{{{1
 
 	return $first;
 } #}}}1
-sub getFirstRAR #{{{1
-{
+sub getFirstRAR($$) {#{{{1
 	my ($self, $nzb) = @_;
 	my $tmp = File::Temp->new(TEMPLATE => 'temp_XXXXX', DIR => $TMP_DIR, SUFFIX => '.nzb', UNLINK => 1);
 	NZB::Binsearch->downloadNZB($nzb, $tmp);
@@ -194,9 +191,9 @@ sub getFirstRAR #{{{1
 	}
 } #}}}1
 
-sub debug     { my($self, $debug) = @_; $DEBUG       = $debug; }
-sub net_speed { my($self, $speed) = @_; $NET_SPEED   = $speed; }
-sub nzb       { my($self, $nzb  ) = @_; $NZB_WRAPPER = $nzb  ; }
-sub rar       { my($self, $rar  ) = @_; $RAR_BIN     = $rar  ; }
+sub debug($$)     { my($self, $debug) = @_; $DEBUG       = $debug; }
+sub net_speed($$) { my($self, $speed) = @_; $NET_SPEED   = $speed; }
+sub nzb($$)       { my($self, $nzb  ) = @_; $NZB_WRAPPER = $nzb  ; }
+sub rar($$)       { my($self, $rar  ) = @_; $RAR_BIN     = $rar  ; }
 
 1;

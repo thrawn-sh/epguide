@@ -7,8 +7,7 @@ use warnings FATAL => 'all';
 
 use XML::DOM;
 
-sub parseNZB #{{{1
-{
+sub parseNZB($$) { #{{{1
 	my ($self, $nzbfile) = @_;
 	my $parser = new XML::DOM::Parser;
 	my @fileset;
@@ -48,8 +47,7 @@ sub parseNZB #{{{1
 	@files = sort { $a->{'subject'} cmp $b->{'subject'}; } @files;
 	return \@files;
 }#}}}1
-sub writeNZB #{{{1
-{
+sub writeNZB($$$) { #{{{1
 	my ($self, $nzbFile, $output) = @_;
 
 	my $xml = XML::DOM::Document->new;
