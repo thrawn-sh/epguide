@@ -47,7 +47,6 @@ sub parseNZB($$) { #{{{1
 	@files = sort { $a->{'subject'} cmp $b->{'subject'}; } @files;
 	return \@files;
 }#}}}1
-$WWW->default_header('Accept-Language' => 'en');
 sub writeNZB($$$) { #{{{1
 	my ($self, $nzbFile, $output) = @_;
 
