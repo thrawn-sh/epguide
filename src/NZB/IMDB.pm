@@ -9,6 +9,8 @@ use Crypt::SSLeay;
 use LWP::ConnCache;
 use WWW::Mechanize;
 
+my $DEBUG = 0;
+
 my $WWW = WWW::Mechanize->new(ssl_opts => { verify_hostname => 0 });
 $WWW->agent_alias('Windows IE 6');
 $WWW->conn_cache(LWP::ConnCache->new);
@@ -30,7 +32,9 @@ sub extract_imdb_data($$) { # {{{1
 			# <title>Contagion (TV 2011) - IMDb</title>
 			if (/<title>(.+) \((?:.+ )(\d{4})\) - IMDb<\/title>/) {
 				$title = $1;
+				print STDERR 'title: ' . $title . "\n" if $DEBUG;
 				$year = $2;
+				print STDERR 'year: ' . $year . "\n" if $DEBUG;
 			}
 
 			# 23,542 IMDb users have given an average vote of 7.0/10
@@ -38,6 +42,8 @@ sub extract_imdb_data($$) { # {{{1
 				$raters = $1;
 				$rating = $2;
 				$raters =~ s/,//;
+				print STDERR 'rating: ' . $rating . "\n" if $DEBUG;
+				print STDERR 'raters: ' . $raters . "\n" if $DEBUG;
 			}
 
 			# <a href="/genre/Drama" itemprop="genre">Drama</a>&nbsp;<span>|</span> <a href="/genre/Sci-Fi" itemprop="genre">Sci-Fi</a>
@@ -45,11 +51,21 @@ sub extract_imdb_data($$) { # {{{1
 				push(@genres, $1);
 			}
         	}
+
+		if ($DEBUG) {
+			print STDERR 'genres:';
+			for my $genre (@genres) {
+				print STDERR ' ' . $genre;
+			}
+			print STDERR "\n";
+		}
         	return {title => $title, year => $year, genre => \@genres, rating => $rating, raters => $raters, url => $url};
 	} else {
 		print STDERR 'Can\'t retrieve ' . $url . ': ' . $! . "\n";
 	}
 	return undef;
 } # }}}1
+
+sub debug($$)     { my($self, $debug) = @_; $DEBUG       = $debug; }
 
 1;
