@@ -5,7 +5,7 @@ package NZB::EpisodeGuides;
 use strict;
 use warnings FATAL => 'all';
 
-use Date::Calc qw( Add_Delta_Days Today Week_of_Year );
+use Date::Calc qw( Add_Delta_Days Today Date_to_Time );
 use LWP::ConnCache;
 use WWW::Mechanize;
 
