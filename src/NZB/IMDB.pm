@@ -17,10 +17,10 @@ $WWW->conn_cache(LWP::ConnCache->new);
 $WWW->default_header('Accept-Encoding' => 'deflate,gzip');
 
 sub extract_imdb_data($$) { # {{{1
-        my ($self, $imdb_number) = @_;
+	my ($self, $imdb_number) = @_;
 
-        my $url = 'http://www.imdb.com/title/tt' . $imdb_number;
-        $WWW->get($url);
+	my $url = 'http://www.imdb.com/title/tt' . $imdb_number;
+	$WWW->get($url);
 	if ($WWW->success) {
 		my $title = undef;
 		my $year = undef;
@@ -50,7 +50,7 @@ sub extract_imdb_data($$) { # {{{1
 			while (s{<a href=\"/genre/([^"]+)"}{}) {
 				push(@genres, $1);
 			}
-        	}
+		}
 
 		if ($DEBUG) {
 			print STDERR 'genres:';
@@ -59,11 +59,11 @@ sub extract_imdb_data($$) { # {{{1
 			}
 			print STDERR "\n";
 		}
-        	return {title => $title, year => $year, genre => \@genres, rating => $rating, raters => $raters, url => $url};
+		return {title => $title, year => $year, genres => \@genres, rating => $rating, raters => $raters, url => $url};
 	} else {
 		print STDERR 'Can\'t retrieve ' . $url . ': ' . $! . "\n";
 	}
-	return undef;
+return undef;
 } # }}}1
 
 sub debug($$)     { my($self, $debug) = @_; $DEBUG       = $debug; }
