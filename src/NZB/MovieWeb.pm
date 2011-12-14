@@ -29,6 +29,7 @@ sub getMovieTitles($$$) { #{{{1
 
 		if (! $WWW->success) {
 			print STDERR "Can't retrieve $url: $!";
+			next;
 		}
 
 		for (split("\n", $WWW->content())) {
