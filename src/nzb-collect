@@ -6,8 +6,6 @@ use strict;
 use warnings FATAL => 'all';
 
 use Date::Calc qw( Add_Delta_Days Date_to_Time Today Week_of_Year );
-use File::Basename;
-use File::Path;
 use File::stat;
 use Getopt::Long;
 use Log::Log4perl qw(:easy);
@@ -45,7 +43,10 @@ sub searchMovies($) { #{{{1
 	my $nzbs = $binsearch->searchNZBQuery($query, $group, $min_size, $max_size, $nzbage);
 	for my $nzb (@$nzbs) {
 		my $movie = getMovieInfoForNZB($nzb, $nfo, $imdb);
-		next unless defined $movie;
+		unless (defined $movie) {
+			$LOGGER->debug('no imdb info available => skipping');
+			next;
+		}
 
 		my $title = $movie->{'title'};
 		my $file_name = lc($title);
@@ -54,7 +55,10 @@ sub searchMovies($) { #{{{1
 
 		my $file   = $CFG->{'nzbdir'} . '/movie-' . $file_name . '.nzb';
 		my $noFile = $CFG->{'nzbdir'} . '/.movie-' . $file_name . '.NO'; # created if rating is to bad => no more queries for this movie
-		next if ((-e $file) or (-e $noFile));
+		if ((-e $file) or (-e $noFile)) {
+			$LOGGER->debug('movie already checked => skipping');
+			next;
+		}
 
 		unless (isMovieAcceptable($movie, $genre_ratings, $minimum_rating)) {
 			$LOGGER->debug('Rating (' . $movie->{'rating'} . ') of "' . $title . '" is to bad => skipping');
@@ -65,7 +69,7 @@ sub searchMovies($) { #{{{1
 
 		next unless $check->checkNZB($nzb, \%blacklist);
 
-		$LOGGER->debug('"' . $title . '"');
+		$LOGGER->debug('"' . $title . '" is ok');
 		$binsearch->downloadNZB($nzb, $file);
 
 		$WRITER->write(' - ' . ' Movie: "' . $title . '"' . "\n", 'movies');
@@ -155,6 +159,7 @@ sub crawl_movies($) { #{{{1
 sub crawl_series() { #{{{1
 	my $binsearch = NZB::Binsearch->new();
 	my $check     = NZB::Check->new(binsearch => $binsearch, speed => $CFG->{'speed'}, wrapper => $CFG->{'wrapper'});
+	my $epGuides  = NZB::EpisodeGuides->new();
 
 	my $nzbage         = $CFG->{'nzbage'};
 	my $search_weeks   = $CFG->{'series_search_weeks'};
@@ -163,24 +168,26 @@ sub crawl_series() { #{{{1
 	for my $serie (@{$CFG->{'series'}}) {
 		my $serieID = $serie->{'id'};
 
-		my $episodes = NZB::EpisodeGuides->getEpisodes($serieID, $search_weeks);
+		my $episodes = $epGuides->getEpisodes($serieID, $search_weeks);
 		for my $episode (@$episodes) {
 			foreach my $hd (0, 1) {
 				my $episodeID = $episode . ($hd ? '-HD' : '');
 				$LOGGER->debug($serieID . ': ' . $episodeID);
 
 				my $file = $CFG->{'nzbdir'} . '/' . $serieID . '_' . $episodeID . '.nzb';
-				unless (-e $file) {
-					my $nzbs = $binsearch->searchNZBSerie($serie, $episode, $hd, $nzbage);
+				if (-e $file) {
+					$LOGGER->debug('episode already checked => skipping');
+					next;
+				}
 
-					$LOGGER->debug('found potential ' . scalar(@$nzbs) . ' nzbs');
+				my $nzbs = $binsearch->searchNZBSerie($serie, $episode, $hd, $nzbage);
+				$LOGGER->debug('found potential ' . scalar(@$nzbs) . ' nzbs');
 
-					if (download($binsearch, $check, $nzbs, $file, \%blacklist)) {
-						$WRITER->write(' - ' . ' Episode: ' . $episodeID . "\n", $serieID);
-						$WRITER->write('   ' . '     NZB: ' . $file . "\n", undef);
-					} else {
-						$LOGGER->debug('no nzb found');
-					}
+				if (download($binsearch, $check, $nzbs, $file, \%blacklist)) {
+					$WRITER->write(' - ' . ' Episode: ' . $episodeID . "\n", $serieID);
+					$WRITER->write('   ' . '     NZB: ' . $file . "\n", undef);
+				} else {
+					$LOGGER->debug('no nzb found');
 				}
 			}
 		}
@@ -354,7 +361,7 @@ if ($CFG->{'series_search_enabled'}) {
 	crawl_series();
 }
 
-foreach my $query ('bdrip', 'dvdrip') {
+foreach my $query ('brrip', 'dvdrip') {
 	$LOGGER->debug('searching for movies (' . $query . ')');
 	searchMovies($query);
 }

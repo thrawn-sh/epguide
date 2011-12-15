@@ -6,6 +6,8 @@ use strict;
 use warnings FATAL => 'all';
 
 use Crypt::SSLeay;
+use File::Basename;
+use File::Path;
 use LWP::ConnCache;
 use Log::Log4perl qw(:easy);
 use WWW::Mechanize;
