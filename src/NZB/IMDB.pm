@@ -35,7 +35,9 @@ sub extract_imdb_data($$) { # {{{1
 
 		for (split("\n", $WWW->content())) {
 			# <title>Contagion (2011) - IMDb</title>
-			if (/<title>(.+) \((?:.+ )?(\d{4})\) - IMDb<\/title>/) {
+			# <title>IMDb - Thor (2011)</title>
+			# <title>John Grin&#x27;s Christmas (TV 1986) - IMDb</title>
+			if (/<title>(?:IMDb - )?(.+) \((?:.+ )?(\d{4})\)(?: - IMDb)?<\/title>/) {
 				$title = HTML::Entities::decode($1);
 				print STDERR 'title: ' . $title . "\n" if $DEBUG;
 				$year = $2;
