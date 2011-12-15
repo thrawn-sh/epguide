@@ -37,7 +37,7 @@ sub downloadNZB($$$) { #{{{1
 
 	my $www = $self->{'www'};
 	$www->post($url, { $nzb->{'id'} => 'on', action => 'nzb' });
-	if (! $www->success) {
+	unless ($www->success) {
 		$LOGGER->error('Can\'t retrieve ' . $url . ': ' . $!);
 	}
 
@@ -54,7 +54,7 @@ sub searchNZB($$) { #{{{1
 
 	my $www = $self->{'www'};
 	$www->get($url);
-	if (! $www->success) {
+	unless ($www->success) {
 		$LOGGER->error('Can\'t retrieve ' . $url . ': ' . $!);
 		return undef;
 	}

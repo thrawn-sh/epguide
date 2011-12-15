@@ -35,7 +35,7 @@ sub parseNZB($$) { #{{{1
 		}
 
 		# sort segments by number (if available)
-		if (defined($segments[0]) && defined($segments[0]->{'number'})){
+		if (defined($segments[0]) and defined($segments[0]->{'number'})){
 			@segments = sort { $a->{'number'} <=> $b->{'number'} } @segments;
 		}
 

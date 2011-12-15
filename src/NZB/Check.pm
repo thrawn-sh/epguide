@@ -65,7 +65,7 @@ sub checkNZB($$$) { #{{{1
 
 	# password and rar in rar
 	my $rar = $self->getFirstRAR($nzb);
-	if (! -e $rar) {
+	unless (-e $rar) {
 		# no rar to check => fail
 		$LOGGER->debug('no rar download');
 		return 0;
@@ -183,7 +183,7 @@ sub getFirstRAR($$) {#{{{1
 			$LOGGER->debug('done');
 			# sometimes the downloaded file name does not match our
 			# expectaion, so we have to rename the file
-			if (! -e $firstRAR) {
+			unless (-e $firstRAR) {
 				$LOGGER->debug('missing expected file "' . $firstRAR . '"');
 
 				opendir(DIR, $tmp_dir);
@@ -192,7 +192,7 @@ sub getFirstRAR($$) {#{{{1
 					$LOGGER->debug('checking "' . $fqfn . '"');
 
 					# only process files
-					next if (! -f $fqfn);
+					next unless (-f $fqfn);
 					# skip all nzb files
 					next if ($file =~ m/\.nzb$/);
 
@@ -210,7 +210,7 @@ sub getFirstRAR($$) {#{{{1
 			my $speed = $self->{'speed'};
 			my $waitTime = (int (($size / $speed) * 2 + $sleepStep));
 
-			while (($waitTime > 0) && (waitpid($pid, 1) == 0) && (! -e $firstRAR)) {
+			while (($waitTime > 0) and (waitpid($pid, 1) == 0) and (! -e $firstRAR)) {
 				sleep($sleepStep);
 				$waitTime -= $sleepStep;
 			}

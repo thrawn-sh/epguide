@@ -43,7 +43,7 @@ sub getEpisodes($$$) { #{{{1
 
 	my $www = $self->{'www'};
 	$www->get($url);
-	if (! $www->success) {
+	unless ($www->success) {
 		$LOGGER->error('Can\'t retrieve ' . $url . ': ' . $!);
 		return undef;
 	}
@@ -61,7 +61,7 @@ sub getEpisodes($$$) { #{{{1
 			$released = join('/', @dateparts);
 			$released = str2time($released);
 
-			if (($nzb_start_date <= $released) && ($released <= $nzb_end_date)) {
+			if (($nzb_start_date <= $released) and ($released <= $nzb_end_date)) {
 				my $episodeID = sprintf("S%02dE%02d", $season, $episode);
 				push(@episodes, $episodeID);
 			}

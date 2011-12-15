@@ -44,7 +44,7 @@ sub getMovieTitles($$$) { #{{{1
 
 		my $www = $self->{'www'};
 		$www->get($url);
-		if (! $www->success) {
+		unless ($www->success) {
 			$LOGGER->warn('Can\'t retrieve ' . $url . ': ' . $!);
 			next;
 		}

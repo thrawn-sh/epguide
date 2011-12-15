@@ -39,7 +39,7 @@ sub extract_imdb_data($$) { # {{{1
 
 	my $www = $self->{'www'};
 	$www->get($url);
-	if (! $www->success) {
+	unless ($www->success) {
 		$LOGGER->error('Can\'t retrieve ' . $url . ': ' . $!);
 		return undef;
 	}
