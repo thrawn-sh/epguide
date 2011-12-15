@@ -107,7 +107,7 @@ sub searchNZBQuery($$$$$$) { #{{{1
 	return $self->searchNZB($url);
 } #}}}1
 sub searchNZBSerie($$$$$) { #{{{1
-	my ($self, $serie, $hd, $episode, $age) = @_;
+	my ($self, $serie, $episode, $hd, $age) = @_;
 
 	my $url = $self->{'base'} . '/index.php?adv_sort=date&adv_col=on' .
 	          '&m=&max=250&adv_g=' . $serie->{'group'} .
