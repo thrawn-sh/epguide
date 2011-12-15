@@ -7,6 +7,7 @@ use warnings FATAL => 'all';
 
 use Date::Calc qw( Add_Delta_Days Today Week_of_Year );
 use LWP::ConnCache;
+use Log::Log4perl qw(:easy);
 use WWW::Mechanize;
 
 sub new {
@@ -42,7 +43,7 @@ sub getMovieTitles($$$) { #{{{1
 		my $www = $self->{'www'};
 		$www->get($url);
 		if (! $www->success) {
-			print STDERR "Can't retrieve $url: $!";
+			WARN('Can\'t retrieve ' . $url . ': ' . $!);
 			next;
 		}
 

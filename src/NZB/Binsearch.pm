@@ -7,9 +7,8 @@ use warnings FATAL => 'all';
 
 use Crypt::SSLeay;
 use LWP::ConnCache;
+use Log::Log4perl qw(:easy);
 use WWW::Mechanize;
-
-my $DEBUG = 0;
 
 sub new {
 	my $class  = shift;
@@ -36,57 +35,57 @@ sub downloadNZB($$$) { #{{{1
 
 	my $www = $self->{'www'};
 	$www->post($url, { $nzb->{'id'} => 'on', action => 'nzb' });
-	if ($www->success) {
-		open (FH, ">$file");
-		print FH $www->content();
-		close (FH);
-	} else {
-		print STDERR 'Can\'t retrieve ' . $url . ': ' . $! . "\n";
+	if (! $www->success) {
+		ERROR('Can\'t retrieve ' . $url . ': ' . $!);
 	}
+
+	open (FH, ">$file");
+	print FH $www->content();
+	close (FH);
 } #}}}1
 sub searchNZB($$) { #{{{1
 	my ($self, $url) = @_;
-
-	print STDERR $url . "\n" if $DEBUG;
+	DEBUG('url: ' . $url);
 
 	my @nzbs;
 
 	my $www = $self->{'www'};
 	$www->get($url);
-	if ($www->success) {
-		my $data = $www->content;
-		while ( $data =~ s/(name=\"\d{8,}\".*?)<input\ //xmsi ) {
-			my $line = $1;
-			while (
-				$line =~ s/
-				\"(\d{8,})\".*?                                # id
-				\<span\ class=\"s\"\>([^<]+).*?                # subject
-				\>\ size:\ ([^,]*)                             # size
-				,\ parts\ available:.*? (\d+)\ \/\ (\d+)       # parts_available parts_complete
-				(.*requires\ password.*)?                      # password_required
-				(?:.*\<a\ href=\"([^"]+viewNFO[^"&]+)[^"]*\")? # nfo
-				.*>([^<]+)<\/a><td><a                          # poster
-				//mxi
-			)
-			{
-				my $password = 0;
-				if (defined $6) {
-					$password = 1;
-				}
+	if (! $www->success) {
+		ERROR('Can\'t retrieve ' . $url . ': ' . $!);
+		return undef;
+	}
 
-				my $nfo = undef;
-				if (defined $7) {
-					$nfo = $self->{'base'} . $7;
-				}
+	my $data = $www->content;
+	while ( $data =~ s/(name=\"\d{8,}\".*?)<input\ //xmsi ) {
+		my $line = $1;
+		while (
+			$line =~ s/
+			\"(\d{8,})\".*?                                # id
+			\<span\ class=\"s\"\>([^<]+).*?                # subject
+			\>\ size:\ ([^,]*)                             # size
+			,\ parts\ available:.*? (\d+)\ \/\ (\d+)       # parts_available parts_complete
+			(.*requires\ password.*)?                      # password_required
+			(?:.*\<a\ href=\"([^"]+viewNFO[^"&]+)[^"]*\")? # nfo
+			.*>([^<]+)<\/a><td><a                          # poster
+			//mxi
+		)
+		{
+			my $password = 0;
+			if (defined $6) {
+				$password = 1;
+			}
 
-				if ($4 == $5) {
-					my $nzb = { id => $1, subject => $2, size => $3, password=> $password, nfo => $nfo, poster => $8 };
-					push (@nzbs, $nzb);
-				}
+			my $nfo = undef;
+			if (defined $7) {
+				$nfo = $self->{'base'} . $7;
+			}
+
+			if ($4 == $5) {
+				my $nzb = { id => $1, subject => $2, size => $3, password=> $password, nfo => $nfo, poster => $8 };
+				push (@nzbs, $nzb);
 			}
 		}
-	} else {
-		print STDERR 'Can\'t retrieve ' . $url . ': ' . $! . "\n";
 	}
 
 	@nzbs= sort { $a->{'id'} cmp $b->{'id'}; } @nzbs;
@@ -123,7 +122,5 @@ sub searchNZBSerie($$$$$) { #{{{1
 
 	return $self->searchNZB($url);
 } #}}}1
-
-sub debug($$) { my($self, $debug) = @_; $DEBUG = $debug; }
 
 1;

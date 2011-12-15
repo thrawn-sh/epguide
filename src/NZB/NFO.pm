@@ -7,6 +7,7 @@ use warnings FATAL => 'all';
 
 use Crypt::SSLeay;
 use LWP::ConnCache;
+use Log::Log4perl qw(:easy);
 use WWW::Mechanize;
 
 sub new {
@@ -29,17 +30,19 @@ sub new {
 
 sub parse_imdb_nr($$) { #{{{1
 	my ($self, $url) = @_;
+	DEBUG('url: ' . $url);
 
 	my $www = $self->{'www'};
 	$www->get($url);
-	if ($www->success) {
-		if ($www->content() =~ /([\w:\/\.]*imdb\.[\w]{2,3}\/[\?\.\/\w\d]+)/) {
-			my $imdb_nr = $1;
-			$imdb_nr =~ s/[^\d]+//g;
-			return $imdb_nr;
-		}
-	} else {
-		print STDERR 'Can\'t retrieve ' . $url . ': ' . $! . "\n";
+	if (! $www->success) {
+		ERROR('Can\'t retrieve ' . $url . ': ' . $!);
+		return undef;
+	}
+
+	if ($www->content() =~ /([\w:\/\.]*imdb\.[\w]{2,3}\/[\?\.\/\w\d]+)/) {
+		my $imdb_nr = $1;
+		$imdb_nr =~ s/[^\d]+//g;
+		return $imdb_nr;
 	}
 	return undef;
 } # }}}1

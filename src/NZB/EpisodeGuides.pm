@@ -8,6 +8,7 @@ use warnings FATAL => 'all';
 use Date::Calc qw( Add_Delta_Days Today Date_to_Time );
 use Date::Parse;
 use LWP::ConnCache;
+use Log::Log4perl qw(:easy);
 use WWW::Mechanize;
 
 sub new {
@@ -41,7 +42,7 @@ sub getEpisodes($$$) { #{{{1
 	my $www = $self->{'www'};
 	$www->get($url);
 	if (! $www->success) {
-		print STDERR "Can't retrieve $url: $!";
+		ERROR('Can\'t retrieve ' . $url . ': ' . $!);
 		return undef;
 	}
 
