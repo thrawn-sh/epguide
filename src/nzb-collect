@@ -340,11 +340,8 @@ if ($CFG{'movie_search_enabled'}) {
 	crawl_movies(\%CFG, $MAILS);
 }
 
-print "AAA\n";
 cleanup(\%CFG);
-print "BBB\n";
 processNotifications(\%CFG, $MAILS);
-print "CCC\n";
 
 local *OUT = $CFG{'output'};
 close(OUT);
