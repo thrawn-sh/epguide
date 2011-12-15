@@ -1,5 +1,7 @@
 #!/usr/bin/perl -w
 
+package NZB;
+
 use strict;
 use warnings FATAL => 'all';
 
@@ -8,31 +10,85 @@ use File::Basename;
 use File::Path;
 use File::stat;
 use Getopt::Long;
+use Log::Log4perl qw(:easy);
 use Mail::Sendmail;
 use NZB::Binsearch;
 use NZB::Check;
 use NZB::EpisodeGuides;
 use NZB::IMDB;
+use NZB::Message;
 use NZB::MovieWeb;
 use NZB::NFO;
 use NZB::NZB;
 
-my %CFG   = parseCMDL();
+Log::Log4perl->easy_init($DEBUG);
+my $LOGGER = get_logger();
 
-NZB::Binsearch->debug($CFG{'debug'});
-NZB::Check->debug($CFG{'debug'});
-NZB::IMDB->debug($CFG{'debug'});
-NZB::Check->net_speed($CFG{'speed'});
-if (defined $CFG{'wrapper'}) {
-	NZB::Check->nzb($CFG{'wrapper'});
-}
+my $CFG    = parseCMDL();
+my $WRITER = NZB::Message->new(output => $CFG->{'output'});
 
-print STDERR "DEBUG is enabled\n" if $CFG{'debug'};
+sub searchMovies($) { #{{{1
+	my ($query) = @_;
 
-sub crawl_movies($$) { #{{{1 
-	my ($CFG, $mails) = @_;
+	my $binsearch = NZB::Binsearch->new();
+	my $check     = NZB::Check->new(binsearch => $binsearch, speed => $CFG->{'speed'}, wrapper => $CFG->{'wrapper'});
+	my $imdb      = NZB::IMDB->new();
+	my $nfo       = NZB::NFO->new();
 
-	local *OUT = $CFG->{'output'};
+	my %blacklist      = map { $_ => 1 } @{$CFG->{'blacklist'}};
+	my $genre_ratings  = $CFG->{'movie_genre_ratings'};
+	my $group          = $CFG->{'movie_group'};
+	my $max_size       = $CFG->{'movie_max_size'};
+	my $min_size       = $CFG->{'movie_min_size'};
+	my $minimum_rating = $CFG->{'movie_rating'};
+	my $nzbage         = $CFG->{'nzbage'};
+
+	my $nzbs = $binsearch->searchNZBQuery($query, $group, $min_size, $max_size, $nzbage);
+	for my $nzb (@$nzbs) {
+		my $movie = getMovieInfoForNZB($nzb, $nfo, $imdb);
+		next unless defined $movie;
+
+		my $title = $movie->{'title'};
+		my $file_name = lc($title);
+		$file_name =~ s/\s+/_/g;
+		$file_name =~ s/\W//g;
+
+		my $file   = $CFG->{'nzbdir'} . '/movie-' . $file_name . '.nzb';
+		my $noFile = $CFG->{'nzbdir'} . '/.movie-' . $file_name . '.NO'; # created if rating is to bad => no more queries for this movie
+		next if ((-e $file) || (-e $noFile));
+
+		unless (isMovieAcceptable($movie, $genre_ratings, $minimum_rating)) {
+			$LOGGER->debug('Rating (' . $movie->{'rating'} . ') of "' . $title . '" is to bad => skipping');
+			open(NO,'>' . $noFile) or die "Can't create new.txt: $!";
+			close(NO);
+			next;
+		}
+
+		next unless $check->checkNZB($nzb, \%blacklist);
+
+		$LOGGER->debug('"' . $title . '"');
+		mkpath(dirname($file));
+		$binsearch->downloadNZB($nzb, $file);
+
+		$WRITER->write(' - ' . ' Movie: "' . $title . '"' . "\n", 'movies');
+		$WRITER->write('   ' . '   NZB: ' . $file . "\n", undef);
+		my $genres = $movie->{'genres'};
+		$WRITER->write('   ' . 'Genres: ' . "@$genres\n", 'movies') if defined $genres;
+
+		my $rating = $movie->{'rating'};
+		$WRITER->write('   ' . 'Rating: ' . $rating . '/10.0' ."\n", 'movies') if defined $rating;
+
+		my $url = $movie->{'url'};
+		$WRITER->write('   ' . '  More: ' . $url ."\n", 'movies') if defined $url;
+		$WRITER->write("\n", 'movies');
+	}
+} #}}}1
+sub crawl_movies($) { #{{{1 
+	my ($mails) = @_;
+
+	my $binsearch = NZB::Binsearch->new();
+	my $imdb      = NZB::IMDB->new();
+	my $nfo       = NZB::NFO->new();
 
 	my %blacklist      = map { $_ => 1 } @{$CFG->{'blacklist'}};
 	my $genre_ratings  = $CFG->{'movie_genre_ratings'};
@@ -44,8 +100,6 @@ sub crawl_movies($$) { #{{{1
 	my $release_weeks  = $CFG->{'movie_release_weeks'};
 	my $search_weeks   = $CFG->{'movie_search_weeks'};
 
- 	my $mail           = $mails->{'movies'};
-
 	my $titles = NZB::MovieWeb->getMovieTitles($release_weeks, $search_weeks);
 	for my $title (@$titles) {
 		my $file_name = lc($title);
@@ -56,62 +110,43 @@ sub crawl_movies($$) { #{{{1
 		my $noFile = $CFG->{'nzbdir'} . '/.movie-' . $file_name . '.NO'; # created if rating is to bad => no more queries for this movie
 		next if ((-e $file) || (-e $noFile));
 
-		my $nzbs = NZB::Binsearch->searchNZBQuery($title, $group, $min_size, $max_size, $nzbage);
-		print STDERR 'found potential ' . scalar(@$nzbs) . ' nzbs for "' . $title . '"' . "\n" if $CFG->{'debug'};
+		my $nzbs = $binsearch->searchNZBQuery($title, $group, $min_size, $max_size, $nzbage);
+		$LOGGER->debug('found potential ' . scalar(@$nzbs) . ' nzbs for "' . $title . '"');
 
 		for my $nzb (@$nzbs) {
-			my $nfo = $nzb->{'nfo'};
-			next if (! defined $nfo);
-
-			my $imdb_id = NZB::NFO->parse_imdb_nr($nfo);
-			next if (! defined $imdb_id);
-
-			my $movie = NZB::IMDB->extract_imdb_data($imdb_id);
-			next if (! defined $movie);
+			my $movie = getMovieInfoForNZB($nzb, $nfo, $imdb);
+			next if (!defined $movie);
 
 			# binsearch sometimes returns not the requested movie
 			next if (! isExpectedMovie($movie->{'title'}, $title));
 
-			# there must be at least 500 voters before we consider the rating at all
-			next if ($movie->{'raters'} < 500);
-
 			if (isMovieAcceptable($movie, $genre_ratings, $minimum_rating)) {
-				if (NZB::Check->checkNZB($nzb, \%blacklist)) {
-					print STDERR '"' . $title . '"' . "\n" if $CFG->{'debug'};
-					mkpath(dirname($file));
-					NZB::Binsearch->downloadNZB($nzb, $file);
+				next unless NZB::Check->checkNZB($nzb, \%blacklist);
 
-	                                $mail .= ' - ' . $title . "\n";
-        	                        $mail .= '   ' . 'Genres:';
+				$LOGGER->debug('"' . $title . '"');
+				mkpath(dirname($file));
+				$binsearch->downloadNZB($nzb, $file);
 
-                	                print OUT 'new NZB: ' . $file . "\n";
-                        	        print OUT "\t" . 'genres:';
-                                	for my $genre (@{$movie->{'genres'}}) {
-                                        	print OUT ' ' . $genre;
-	                                        $mail .= ' ' . $genre;
-        	                        }
-                	                print OUT "\n";
-                        	        $mail .= "\n";
-
-
-					my $rating = $movie->{'rating'};
-					if (defined $rating) {
-						print OUT "\t" . 'rating: ' . $rating . '/10.0' . "\n";
-						$mail .= '   ' . 'Rating: ' . $rating . '/10.0' ."\n";
-					}
-
-					my $url = $movie->{'url'};
-        	                        if (defined $url) {
-                	                        print OUT "\t" . '   url: ' . $url . "\n";
-                        	                $mail .= '   ' . '  More: ' . $url . "\n";
-                                	}
-	                                print OUT "\n";
-        	                        $mail .= "\n";
-				} else {
-					next;
+				$WRITER->write(' - ' . ' Movie: "' . $title . '"' . "\n", 'movies');
+				$WRITER->write('   ' . '   NZB: ' . $file . "\n", undef);
+				$WRITER->write('   ' . 'Genres:', 'movies');
+				for my $genre (@{$movie->{'genres'}}) {
+					$WRITER->write(' ' . $genre, 'movies');
 				}
+				$WRITER->write("\n", 'movies');
+
+				my $rating = $movie->{'rating'};
+				if (defined $rating) {
+					$WRITER->write('   ' . 'Rating: ' . $rating . '/10.0' ."\n", 'movies');
+				}
+
+				my $url = $movie->{'url'};
+				if (defined $url) {
+					$WRITER->write('   ' . '  More: ' . $url ."\n", 'movies');
+				}
+				$WRITER->write("\n", 'movies');
 			} else {
-				print STDERR 'Rating (' . $movie->{'rating'} . ') of "' . $title . '" is to bad => skipping' . "\n" if $CFG->{'debug'};
+				$LOGGER->debug('Rating (' . $movie->{'rating'} . ') of "' . $title . '" is to bad => skipping');
 				open(NO,'>' . $noFile) or die "Can't create new.txt: $!";
 				close(NO);
 			}
@@ -119,13 +154,10 @@ sub crawl_movies($$) { #{{{1
 			last;
 		}
 	}
-
-        $mails->{'movies'} = $mail;
 } #}}}1
-sub crawl_series($$) { #{{{1
-	my ($CFG, $mails) = @_;
-
-	local *OUT = $CFG->{'output'};
+sub crawl_series() { #{{{1
+	my $binsearch = NZB::Binsearch->new();
+	my $check     = NZB::Check->new(binsearch => $binsearch, speed => $CFG->{'speed'}, wrapper => $CFG->{'wrapper'});
 
 	my $nzbage         = $CFG->{'nzbage'};
 	my $search_weeks   = $CFG->{'series_search_weeks'};
@@ -135,27 +167,22 @@ sub crawl_series($$) { #{{{1
 		my $serieID = $serie->{'id'};
 
 		my $episodes = NZB::EpisodeGuides->getEpisodes($serieID, $search_weeks);
-
 		for my $episode (@$episodes) {
 			foreach my $hd (0, 1) {
-				print STDERR $serieID . ': ' . $episode . ($hd ? '-HD' : '') ."\n"  if $CFG->{'debug'};
+				my $episodeID = $episode . ($hd ? '-HD' : '');
+				$LOGGER->debug($serieID . ': ' . $episodeID);
 
-				my $file = $CFG->{'nzbdir'} . '/' . $serieID . '_' . $episode;
-				$file .= '-HD' if $hd;
-				$file .= '.nzb';
-
+				my $file = $CFG->{'nzbdir'} . '/' . $serieID . '_' . $episodeID . '.nzb';
 				if (! -e $file) {
-					my $nzbs = NZB::Binsearch->searchNZBSerie($serie, $hd, $episode, $nzbage);
+					my $nzbs = $binsearch->searchNZBSerie($serie, $episode, $hd, $nzbage);
 
-					print STDERR 'found potential ' . scalar(@$nzbs) . ' nzbs' . "\n" if $CFG->{'debug'};
+					$LOGGER->debug('found potential ' . scalar(@$nzbs) . ' nzbs');
 
-					if (download($nzbs, $file, \%blacklist)) {
-						my $mail = $mails->{$serieID};
-						$mail .= ' - ' . $episode . ($hd ? '-HD' : '') . "\n";
-						$mails->{$serieID} = $mail;
-						print OUT 'new NZB: ' . $file . "\n";
+					if (download($check, $nzbs, $file, \%blacklist)) {
+						$WRITER->write(' - ' . ' Episode: ' . $episodeID . "\n", $serieID);
+						$WRITER->write('   ' . '     NZB: ' . $file . "\n", undef);
 					} else {
-						print STDERR 'no nzb found' ."\n" if $CFG->{'debug'};
+						$LOGGER->debug('no nzb found');
 					}
 				}
 			}
@@ -163,9 +190,7 @@ sub crawl_series($$) { #{{{1
 	}
 } #}}}1 
 
-sub cleanup($) { #{{{1
-	my ($CFG) = @_;
-
+sub cleanup() { #{{{1
 	my @today        = Today();
 	my $search_weeks = ($CFG->{'series_search_weeks'}, $CFG->{'movie_search_weeks'})[$CFG->{'series_search_weeks'} < $CFG->{'movie_search_weeks'}];
 	my $keep_date    = Date_to_Time(Add_Delta_Days(@today, $search_weeks * 2 * -7), 0, 0, 0);
@@ -176,18 +201,18 @@ sub cleanup($) { #{{{1
 		if (($file =~ m/.+\.nzb$/) || ($file =~ m/.+\.NO$/)) {
 			my $sb = stat($dir . '/' . $file);
 			if ($sb->mtime < $keep_date) {
-				print STDERR 'cleaning old nzb: ' . $file . "\n" if $CFG->{'debug'};
+				$LOGGER->debug('cleaning old nzb: ' . $file);
 				unlink($dir . '/' . $file);
 			}
 		}
 	}
 	closedir(DIR);
 } #}}}1
-sub download($$$) { #{{{1
-	my ($nzbs, $file, $blacklist) = @_;
+sub download($$$$) { #{{{1
+	my ($checker, $nzbs, $file, $blacklist) = @_;
 	
 	for my $nzb (@$nzbs) {
-		if (NZB::Check->checkNZB($nzb, %$blacklist)) {
+		if ($checker->checkNZB($nzb, %$blacklist)) {
 			mkpath(dirname($file));
 			NZB::Binsearch->downloadNZB($nzb, $file);
 			return 1;
@@ -196,20 +221,25 @@ sub download($$$) { #{{{1
 
 	return 0;
 } #}}}1
-sub initMail($) { #{{{1
-	my ($CFG) = @_;
+sub getMovieInfoForNZB($$$) { #{{{1
+	my ($nzb, $nfoParser, $imdbParser) = @_;
 
-	my %mails = ();
-	for my $serie (@{$CFG->{'series'}}) {
-		$mails{$serie->{'id'}} = '';
-	}
+	my $nfo = $nzb->{'nfo'};
+	return undef if (! defined $nfo);
 
-	$mails{'movies'} = '';
+	my $imdb_id = $nfoParser->parse_imdb_nr($nfo);
+	return undef if (! defined $imdb_id);
 
-	return \%mails;
+	return $imdbParser->extract_imdb_data($imdb_id);
 } #}}}1
 sub isMovieAcceptable($$$) { #{{{1
 	my ($movie, $genre_ratings, $minimum_rating) = @_;
+
+	# there must be at least 500 voters before we consider the rating at all
+	if ($movie->{'raters'} < 500) {
+		return 0;
+	}
+
 	my $rating = $movie->{'rating'};
 	for my $genre (@{$movie->{'genres'}}) {
 		my $genre_rating = $genre_ratings->{lc($genre)};
@@ -236,7 +266,6 @@ sub parseCMDL { # {{{1
 	my $config = $ENV{HOME} . '/.nzb-collect';
 	my $help=0;
 
-	my $debug;
 	my $nzbage;
 	my $nzbdir;
 	my $output;
@@ -245,7 +274,6 @@ sub parseCMDL { # {{{1
 
 	my $result = GetOptions(
 		"config=s"  => \$config,
-		"debug!"    => \$debug,
 		"dir=s"     => \$nzbdir,
 		"help!"     => \$help,
 		"nzbage=i"  => \$nzbage,
@@ -258,7 +286,6 @@ sub parseCMDL { # {{{1
 		print $0 . ': <OPTIONS>' . "\n";
 		print "    --nzbage:  TODO\n";
 		print "    --config:  filename of the configuration-file to read.\n";
-		print "    --debug:   TODO\n";
 		print "    --dir:     diretory to output the nzb files to.\n";
 		print "    --help:    print this help.\n";
 		print "    --output:  write progress and messages to this file (default: STDOUT).\n";
@@ -276,7 +303,6 @@ sub parseCMDL { # {{{1
 
 	# overriding config values by commandline values (won't be saved)
 	if (defined $nzbage)  { $CFG{'nzbage'}   = $nzbage;  }
-	if (defined $debug)   { $CFG{'debug'}    = $debug;   }
 	if (defined $nzbdir)  { $CFG{'nzbdir'}   = $nzbdir;  }
 	if (defined $speed)   { $CFG{'speed'}    = $speed;   }
 	if (defined $wrapper) { $CFG{'wrapper'}  = $wrapper; }
@@ -288,60 +314,56 @@ sub parseCMDL { # {{{1
 		$CFG{'output'} = *STDOUT;
 	}
 
-	return %CFG;
+	return \%CFG;
 } # }}}1
-sub processNotifications($$) { #{{{1
-	my ($CFG, $mails) = @_;
-
+sub processNotifications() { #{{{1
 	my $from = $CFG->{'sender'};
 	for my $serie (@{$CFG->{'series'}}) {
 		my $serieID = $serie->{'id'};
-		my $message = $mails->{$serieID};
+		my $message = $WRITER->getMessageForBox($serieID);
 		if ($message) {
 			my $title = $serie->{'query'};
 			$title =~ s/\+/ /g;
-
+			
 			my $prefix = "Hi\n\nHave you seen, that the new episodes of $title have aired in the US? Can't wait to view them on TV.\n\n";
 			my $suffix = "\ncu\n\tAlex\n";
-			sendMails($CFG, $serieID, '[Notify] ' . $title, $prefix . $message . $suffix);
+			sendMails($serieID, '[Notify] ' . $title, $prefix . $message . $suffix);
 		}
 	}
 
-	my $message = $mails->{'movies'};
+	my $message = $WRITER->getMessageForBox('movies');
 	if ($message) {
 		my $prefix = "Hi\n\nDo you know the following movie(s)? The rating on IMDB looks very promising:\n\n";
 		my $suffix = "\nI'll keep you posted if I find other interesing movies.\n\ncu\n\tAlex\n";
-		sendMails($CFG, 'movies', '[Notify] movies', $prefix . $message . $suffix);
+		sendMails('movies', '[Notify] movies', $prefix . $message . $suffix);
 	}
 } #}}}1
-sub sendMails($$$$) { #{{{1
-	my ($CFG, $id, $subject, $message) = @_;
-
-	local *OUT = $CFG->{'output'};
+sub sendMails($$$) { #{{{1
+	my ($id, $subject, $message) = @_;
 
 	my $notify = $CFG->{'notify'};
 	for my $reciever (@{$notify->{$id}}) {
-		my %mail = (From => $CFG{'sender'}, To => $reciever, Subject => $subject, Message => $message);
+		my %mail = (From => $CFG->{'sender'}, To => $reciever, Subject => $subject, Message => $message);
 		sendmail(%mail) or die $Mail::Sendmail::error;
-		print STDERR $Mail::Sendmail::log if $CFG{'debug'};
-		print OUT 'mail for ' . $id . ' sent to ' . $reciever . "\n";
+		$LOGGER->debug($Mail::Sendmail::log);
+		$WRITER->write('mail for ' . $id . ' sent to ' . $reciever . "\n", undef);
 	}
 }#}}}1
 
-my $MAILS = initMail(\%CFG);
+#if ($CFG->{'series_search_enabled'}) {
+#	$LOGGER->debug('searching for series');
+#	crawl_series();
+#}
 
-if ($CFG{'series_search_enabled'}) {
-	print STDERR 'searching for series' . "\n" if $CFG{'debug'};
-	crawl_series(\%CFG, $MAILS);
+foreach my $query ('bdrip', 'dvdrip') {
+	$LOGGER->debug('searching for movies (' . $query . ')');
+	searchMovies($query);
 }
 
-if ($CFG{'movie_search_enabled'}) {
-	print STDERR 'searching for movies' . "\n" if $CFG{'debug'};
-	crawl_movies(\%CFG, $MAILS);
-}
+#if ($CFG->{'movie_search_enabled'}) {
+#	$LOGGER->debug('searching for movies');
+#	crawl_movies();
+#}
 
-cleanup(\%CFG);
-processNotifications(\%CFG, $MAILS);
-
-local *OUT = $CFG{'output'};
-close(OUT);
+cleanup();
+#processNotifications();
