@@ -18,7 +18,7 @@ sub new {
 	return $self;
 }
 
-sub getMessageBox($) {
+sub getMessageForBox($) {
 	my ($self, $boxName) = @_;
 	return $self->{'messages'}->{$boxName};
 }
