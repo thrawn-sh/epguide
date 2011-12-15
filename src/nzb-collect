@@ -24,7 +24,7 @@ my $LOGGER = get_logger();
 my $CFG    = parseCMDL();
 my $WRITER = NZB::Message->new(output => $CFG->{'output'});
 
-sub crawl_series($) { #{{{1
+sub crawl_movies($) { #{{{1
 	my ($query) = @_;
 
 	my $binsearch = NZB::Binsearch->new();
@@ -299,4 +299,4 @@ if ($CFG->{'movie_search_enabled'}) {
 }
 
 cleanup();
-#processNotifications();
+processNotifications();
