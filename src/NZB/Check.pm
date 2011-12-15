@@ -119,7 +119,7 @@ sub determineFirstRAR($$) { #{{{1
 sub getFirstRAR($$) {#{{{1
 	my ($self, $nzb) = @_;
 	my $tmp = File::Temp->new(TEMPLATE => 'temp_XXXXX', DIR => $TMP_DIR, SUFFIX => '.nzb', UNLINK => 1);
-	NZB::Binsearch->downloadNZB($nzb, $tmp);
+	NZB::Binsearch->new()->downloadNZB($nzb, $tmp);
 
 	my $files_ref = NZB::NZB->parseNZB($tmp);
 
