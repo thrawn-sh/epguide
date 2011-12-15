@@ -15,14 +15,38 @@ use Log::Log4perl qw(:easy);
 use NZB::Binsearch;
 use NZB::NZB;
 
-my $LOGGER = get_logger();
-
 File::Temp->safe_level(File::Temp::HIGH);
 
-my $NET_SPEED   = 10 * 1000; # 10 kb/s
-my $NZB_WRAPPER = dirname($0) . '/nzb_wrapper.sh';
-my $RAR_BIN     = 'unrar';
-my $TMP_DIR     = File::Temp->newdir(File::Spec->tmpdir() . '/nzb_XXXXX', UNLINK => 1);
+my $LOGGER = get_logger();
+
+sub new {
+	my $class  = shift;
+	my %params = @_;
+
+	my $www = WWW::Mechanize->new(ssl_opts => { verify_hostname => 0 });
+	$www->agent_alias('Windows IE 6');
+	$www->conn_cache(LWP::ConnCache->new);
+	$www->default_header('Accept-Encoding' => 'deflate,gzip');
+	$www->default_header('Accept-Language' => 'en');
+
+	my $self = {
+		binsearch => $params{'binsearch'},
+		speed     => 10 * 1000, # 10 kb/s
+		tmp_dir   => File::Temp->newdir(File::Spec->tmpdir() . '/nzb_XXXXX', UNLINK => 1),
+		unrar     => 'unrar',
+		wrapper   => dirname($0) . '/nzb_wrapper.sh',
+	};
+
+	my $speed = $params{'speed'};
+	$self->{'speed'} = $speed if defined $speed;
+	my $unrar = $params{'unrar'};
+	$self->{'unrar'} = $unrar if defined $unrar;
+	my $wrapper = $params{'wrapper'};
+	$self->{'wrapper'} = $wrapper if defined $wrapper;
+
+	bless $self, $class;
+	return $self;
+}
 
 sub checkNZB($$$) { #{{{1
 	my ($self, $nzb,  $blacklist) = @_;
@@ -50,8 +74,9 @@ sub checkNZB($$$) { #{{{1
 	# lt  : technical filelist
 	# lb  : list bare file names
 	# -p- : don't ask for password
-	my @bare_files = `"$RAR_BIN" lb -p- "$rar" 2> /dev/null`;
-	my @technical  = `"$RAR_BIN" lt -p- "$rar" 2> /dev/null`;
+	my $unrar = $self->{'unrar'};
+	my @bare_files = `"$unrar" lb -p- "$rar" 2> /dev/null`;
+	my @technical  = `"$unrar" lt -p- "$rar" 2> /dev/null`;
 
 	# empty rar or encrypted headers
 	if (scalar @bare_files == 0) {
@@ -118,14 +143,17 @@ sub determineFirstRAR($$) { #{{{1
 } #}}}1
 sub getFirstRAR($$) {#{{{1
 	my ($self, $nzb) = @_;
-	my $tmp = File::Temp->new(TEMPLATE => 'temp_XXXXX', DIR => $TMP_DIR, SUFFIX => '.nzb', UNLINK => 1);
-	NZB::Binsearch->new()->downloadNZB($nzb, $tmp);
+	my $tmp_dir = $self->{'tmp_dir'};
+	my $tmp = File::Temp->new(TEMPLATE => 'temp_XXXXX', DIR => $tmp_dir, SUFFIX => '.nzb', UNLINK => 1);
+
+	my $binsearch = $self->{'binsearch'};
+	$binsearch->downloadNZB($nzb, $tmp);
 
 	my $files_ref = NZB::NZB->parseNZB($tmp);
 
 	my $first = $self->determineFirstRAR($files_ref);
 	if (defined $first) {
-		my $firstNZB = File::Temp->new(TEMPLATE => 'min_XXXXX', DIR => $TMP_DIR, SUFFIX => '.nzb', UNLINK => 1);
+		my $firstNZB = File::Temp->new(TEMPLATE => 'min_XXXXX', DIR => $tmp_dir, SUFFIX => '.nzb', UNLINK => 1);
 		NZB::NZB->writeNZB($first, $firstNZB);
 
 		my $size = 0;
@@ -136,7 +164,7 @@ sub getFirstRAR($$) {#{{{1
 		my $firstRAR = undef;
 		$first->{'subject'} =~ m/\"(.+)\"/;
 		if (defined $1) {
-			$firstRAR = File::Spec->rel2abs($TMP_DIR . '/' . $1);
+			$firstRAR = File::Spec->rel2abs($tmp_dir . '/' . $1);
 		} else {
 			$LOGGER->debug($first->{'subject'});
 		}
@@ -147,19 +175,20 @@ sub getFirstRAR($$) {#{{{1
 		} elsif ($pid == 0) {
 			my $absFile = File::Spec->rel2abs($firstNZB);
 
+			my $wrapper = $self->{'wrapper'};
 			# download $firstNZB
-			die 'no "' . $NZB_WRAPPER . '" available' unless -e $NZB_WRAPPER;
-			$LOGGER->debug('calling "' . $NZB_WRAPPER . '" with "' . $TMP_DIR . '" and "' . $absFile . '"');
-			`"$NZB_WRAPPER" "$TMP_DIR" "$absFile" > /dev/null 2> /dev/null`;
+			die 'no "' . $wrapper . '" available' unless -e $wrapper;
+			$LOGGER->debug('calling "' . $wrapper . '" with "' . $tmp_dir . '" and "' . $absFile . '"');
+			`"$wrapper" "$tmp_dir" "$absFile" > /dev/null 2> /dev/null`;
 			$LOGGER->debug('done');
 			# sometimes the downloaded file name does not match our
 			# expectaion, so we have to rename the file
 			if (! -e $firstRAR) {
 				$LOGGER->debug('missing expected file "' . $firstRAR . '"');
 
-				opendir(DIR, $TMP_DIR);
+				opendir(DIR, $tmp_dir);
 				while(my $file = readdir(DIR)) {
-					my $fqfn = $TMP_DIR . '/' . $file;
+					my $fqfn = $tmp_dir . '/' . $file;
 					$LOGGER->debug('checking "' . $fqfn . '"');
 
 					# only process files
@@ -178,7 +207,8 @@ sub getFirstRAR($$) {#{{{1
 			# give the child time to download the nzb (factor 2 is
 			# grace)
 			my $sleepStep = 5;
-			my $waitTime = (int (($size / $NET_SPEED) * 2 + $sleepStep));
+			my $speed = $self->{'speed'};
+			my $waitTime = (int (($size / $speed) * 2 + $sleepStep));
 
 			while (($waitTime > 0) && (waitpid($pid, 1) == 0) && (! -e $firstRAR)) {
 				sleep($sleepStep);
@@ -192,9 +222,5 @@ sub getFirstRAR($$) {#{{{1
 		return $firstRAR;
 	}
 } #}}}1
-
-sub net_speed($$) { my($self, $speed) = @_; $NET_SPEED   = $speed; }
-sub nzb($$)       { my($self, $nzb  ) = @_; $NZB_WRAPPER = $nzb  ; }
-sub rar($$)       { my($self, $rar  ) = @_; $RAR_BIN     = $rar  ; }
 
 1;
