@@ -41,6 +41,7 @@ sub downloadNZB($$$) { #{{{1
 		$LOGGER->error('Can\'t retrieve ' . $url . ': ' . $!);
 	}
 
+	mkpath(dirname($file));
 	open (FH, ">$file");
 	print FH $www->content();
 	close (FH);

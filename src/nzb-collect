@@ -67,7 +67,6 @@ sub searchMovies($) { #{{{1
 		next unless $check->checkNZB($nzb, \%blacklist);
 
 		$LOGGER->debug('"' . $title . '"');
-		mkpath(dirname($file));
 		$binsearch->downloadNZB($nzb, $file);
 
 		$WRITER->write(' - ' . ' Movie: "' . $title . '"' . "\n", 'movies');
@@ -124,7 +123,6 @@ sub crawl_movies($) { #{{{1
 				next unless NZB::Check->checkNZB($nzb, \%blacklist);
 
 				$LOGGER->debug('"' . $title . '"');
-				mkpath(dirname($file));
 				$binsearch->downloadNZB($nzb, $file);
 
 				$WRITER->write(' - ' . ' Movie: "' . $title . '"' . "\n", 'movies');
@@ -178,7 +176,7 @@ sub crawl_series() { #{{{1
 
 					$LOGGER->debug('found potential ' . scalar(@$nzbs) . ' nzbs');
 
-					if (download($check, $nzbs, $file, \%blacklist)) {
+					if (download($binsearch, $check, $nzbs, $file, \%blacklist)) {
 						$WRITER->write(' - ' . ' Episode: ' . $episodeID . "\n", $serieID);
 						$WRITER->write('   ' . '     NZB: ' . $file . "\n", undef);
 					} else {
@@ -209,12 +207,11 @@ sub cleanup() { #{{{1
 	closedir(DIR);
 } #}}}1
 sub download($$$$) { #{{{1
-	my ($checker, $nzbs, $file, $blacklist) = @_;
+	my ($binsearch, $check, $nzbs, $file, $blacklist) = @_;
 	
 	for my $nzb (@$nzbs) {
-		if ($checker->checkNZB($nzb, %$blacklist)) {
-			mkpath(dirname($file));
-			NZB::Binsearch->downloadNZB($nzb, $file);
+		if ($check->checkNZB($nzb, %$blacklist)) {
+			$binsearch->downloadNZB($nzb, $file);
 			return 1;
 		}
 	}
@@ -350,10 +347,10 @@ sub sendMails($$$) { #{{{1
 	}
 }#}}}1
 
-#if ($CFG->{'series_search_enabled'}) {
-#	$LOGGER->debug('searching for series');
-#	crawl_series();
-#}
+if ($CFG->{'series_search_enabled'}) {
+	$LOGGER->debug('searching for series');
+	crawl_series();
+}
 
 foreach my $query ('bdrip', 'dvdrip') {
 	$LOGGER->debug('searching for movies (' . $query . ')');
