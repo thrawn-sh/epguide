@@ -6,11 +6,14 @@ use strict;
 use warnings FATAL => 'all';
 
 sub new {
-	my ($class, $output) = @_;
+	my $class  = shift;
+	my %params = @_;
+
 	my $self = {
-		stream   => $output,
+		stream   => $params{'output'},
 		messages => { },
 	};
+
 	bless $self, $class;
 	return $self;
 }

@@ -9,38 +9,52 @@ use Crypt::SSLeay;
 use LWP::ConnCache;
 use WWW::Mechanize;
 
-my $WWW = WWW::Mechanize->new(ssl_opts => { verify_hostname => 0 });
-$WWW->agent_alias('Windows IE 6');
-$WWW->conn_cache(LWP::ConnCache->new);
-$WWW->default_header('Accept-Encoding' => 'deflate,gzip');
-$WWW->default_header('Accept-Language' => 'en');
+my $DEBUG = 0;
 
-my $DEBUG         = 0;
-my $BINSEARCH_URL = 'https://www.binsearch.info';
+sub new {
+	my $class  = shift;
+	my %params = @_;
+
+	my $www = WWW::Mechanize->new(ssl_opts => { verify_hostname => 0 });
+	$www->agent_alias('Windows IE 6');
+	$www->conn_cache(LWP::ConnCache->new);
+	$www->default_header('Accept-Encoding' => 'deflate,gzip');
+	$www->default_header('Accept-Language' => 'en');
+
+	my $self = {
+		base => 'https://www.binsearch.info',
+		www  => $www,
+	};
+
+	bless $self, $class;
+	return $self;
+}
 
 sub downloadNZB($$$) { #{{{1
 	my ($self, $nzb, $file) = @_;
-	my $url = $BINSEARCH_URL . '/fcgi/nzb.fcgi';
+	my $url = $self->{'base'} . '/fcgi/nzb.fcgi';
 
-	$WWW->post($url, { $nzb->{'id'} => 'on', action => 'nzb' });
-	if ($WWW->success) {
+	my $www = $self->{'www'};
+	$www->post($url, { $nzb->{'id'} => 'on', action => 'nzb' });
+	if ($www->success) {
 		open (FH, ">$file");
-		print FH $WWW->content();
+		print FH $www->content();
 		close (FH);
 	} else {
 		print STDERR 'Can\'t retrieve ' . $url . ': ' . $! . "\n";
 	}
 } #}}}1
-sub searchNZB($) { #{{{1
-	my ($url) = @_;
+sub searchNZB($$) { #{{{1
+	my ($self, $url) = @_;
 
 	print STDERR $url . "\n" if $DEBUG;
 
 	my @nzbs;
 
-	$WWW->get($url);
-	if ($WWW->success) {
-		my $data = $WWW->content;
+	my $www = $self->{'www'};
+	$www->get($url);
+	if ($www->success) {
+		my $data = $www->content;
 		while ( $data =~ s/(name=\"\d{8,}\".*?)<input\ //xmsi ) {
 			my $line = $1;
 			while (
@@ -62,7 +76,7 @@ sub searchNZB($) { #{{{1
 
 				my $nfo = undef;
 				if (defined $7) {
-					$nfo = $BINSEARCH_URL . $7;
+					$nfo = $self->{'base'} . $7;
 				}
 
 				if ($4 == $5) {
@@ -82,7 +96,7 @@ sub searchNZBQuery($$$$$$) { #{{{1
 	my ($self, $query, $group, $min, $max, $age) = @_;
 	$query =~ s/\W+/+/g;
 
-	my $url = $BINSEARCH_URL . '/index.php?adv_sort=date&adv_col=on' .
+	my $url = $self->{'base'} . '/index.php?adv_sort=date&adv_col=on' .
 	          '&m=&max=250&adv_g=' . $group .
 		  '&adv_nfo=on' .
 	          '&adv_age=' . $age .
@@ -90,12 +104,12 @@ sub searchNZBQuery($$$$$$) { #{{{1
 	          '&maxsize=' . $max .
 	          '&q=' . $query;
 
-	return searchNZB($url);
+	return $self->searchNZB($url);
 } #}}}1
 sub searchNZBSerie($$$$$) { #{{{1
 	my ($self, $serie, $hd, $episode, $age) = @_;
 
-	my $url = $BINSEARCH_URL . '/index.php?adv_sort=date&adv_col=on' .
+	my $url = $self->{'base'} . '/index.php?adv_sort=date&adv_col=on' .
 	          '&m=&max=250&adv_g=' . $serie->{'group'} .
 	          '&adv_age=' . $age;
 	if ($hd) {
@@ -107,7 +121,7 @@ sub searchNZBSerie($$$$$) { #{{{1
 	}
 	$url .= '&q=' . $serie->{'query'} . '+' . $episode;
 
-	return searchNZB($url);
+	return $self->searchNZB($url);
 } #}}}1
 
 sub debug($$) { my($self, $debug) = @_; $DEBUG = $debug; }

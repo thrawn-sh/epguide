@@ -12,11 +12,23 @@ use WWW::Mechanize;
 
 my $DEBUG = 0;
 
-my $WWW = WWW::Mechanize->new(ssl_opts => { verify_hostname => 0 });
-$WWW->agent_alias('Windows IE 6');
-$WWW->conn_cache(LWP::ConnCache->new);
-$WWW->default_header('Accept-Encoding' => 'deflate,gzip');
-$WWW->default_header('Accept-Language' => 'en');
+sub new {
+	my $class  = shift;
+	my %params = @_;
+
+	my $www = WWW::Mechanize->new(ssl_opts => { verify_hostname => 0 });
+	$www->agent_alias('Windows IE 6');
+	$www->conn_cache(LWP::ConnCache->new);
+	$www->default_header('Accept-Encoding' => 'deflate,gzip');
+	$www->default_header('Accept-Language' => 'en');
+
+	my $self = {
+		www => $www,
+	};
+
+	bless $self, $class;
+	return $self;
+}
 
 sub extract_imdb_data($$) { # {{{1
 	my ($self, $imdb_number) = @_;
@@ -25,15 +37,16 @@ sub extract_imdb_data($$) { # {{{1
 
 	print STDERR 'url: ' . $url . "\n" if $DEBUG;
 
-	$WWW->get($url);
-	if ($WWW->success) {
+	my $www = $self->{'www'};
+	$www->get($url);
+	if ($www->success) {
 		my $title = undef;
 		my $year = undef;
 		my @genres;
 		my $rating = undef;
 		my $raters = undef;
 
-		for (split("\n", $WWW->content())) {
+		for (split("\n", $www->content())) {
 			# <title>Contagion (2011) - IMDb</title>
 			# <title>IMDb - Thor (2011)</title>
 			# <title>John Grin&#x27;s Christmas (TV 1986) - IMDb</title>

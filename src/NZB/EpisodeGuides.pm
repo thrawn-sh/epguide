@@ -10,11 +10,23 @@ use Date::Parse;
 use LWP::ConnCache;
 use WWW::Mechanize;
 
-my $WWW = WWW::Mechanize->new(ssl_opts => { verify_hostname => 0 });
-$WWW->agent_alias('Windows IE 6');
-$WWW->conn_cache(LWP::ConnCache->new);
-$WWW->default_header('Accept-Encoding' => 'deflate,gzip');
-$WWW->default_header('Accept-Language' => 'en');
+sub new {
+	my $class  = shift;
+	my %params = @_;
+
+	my $www = WWW::Mechanize->new(ssl_opts => { verify_hostname => 0 });
+	$www->agent_alias('Windows IE 6');
+	$www->conn_cache(LWP::ConnCache->new);
+	$www->default_header('Accept-Encoding' => 'deflate,gzip');
+	$www->default_header('Accept-Language' => 'en');
+
+	my $self = {
+		www => $www,
+	};
+
+	bless $self, $class;
+	return $self;
+}
 
 sub getEpisodes($$$) { #{{{1
 	my ($self, $serie, $search_weeks) = @_;
@@ -25,14 +37,15 @@ sub getEpisodes($$$) { #{{{1
 	my $nzb_start_date = Date_to_Time(Add_Delta_Days(@today, $search_weeks * -7), 0, 0, 0);
 
 	my $url = 'http://epguides.com/' . $serie . '/';
-	$WWW->get($url);
 
-	if (! $WWW->success) {
+	my $www = $self->{'www'};
+	$www->get($url);
+	if (! $www->success) {
 		print STDERR "Can't retrieve $url: $!";
 		return undef;
 	}
 
-	for (split("\n", $WWW->content())) {
+	for (split("\n", $www->content())) {
 		if (/\s+(\d{1,2})-(\d{1,2})\s+(?:\S+\s+){0,1}(\d{2}.\w{3}.\d{2})/) {
 			my $season   = $1;
 			my $episode  = $2;
