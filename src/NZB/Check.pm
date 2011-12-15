@@ -15,6 +15,8 @@ use Log::Log4perl qw(:easy);
 use NZB::Binsearch;
 use NZB::NZB;
 
+my $LOGGER = get_logger();
+
 File::Temp->safe_level(File::Temp::HIGH);
 
 my $NET_SPEED   = 10 * 1000; # 10 kb/s
@@ -27,13 +29,13 @@ sub checkNZB($$$) { #{{{1
 	
 	# nzb from blacklisted poster
 	if (defined $blacklist->{$nzb->{'poster'}}) {
-		DEBUG('blacklist');
+		$LOGGER->debug('blacklist');
 		return 0;
 	}
 
 	# binsearch says this is a password protected nzb 
 	if ($nzb->{'password'}) {
-		DEBUG('password (binsearch)');
+		$LOGGER->debug('password (binsearch)');
 		return 0;
 	}
 
@@ -41,7 +43,7 @@ sub checkNZB($$$) { #{{{1
 	my $rar = $self->getFirstRAR($nzb);
 	if (! -e $rar) {
 		# no rar to check => fail
-		DEBUG('no rar download');
+		$LOGGER->debug('no rar download');
 		return 0;
 	}
 
@@ -53,7 +55,7 @@ sub checkNZB($$$) { #{{{1
 
 	# empty rar or encrypted headers
 	if (scalar @bare_files == 0) {
-		DEBUG('empty rar');
+		$LOGGER->debug('empty rar');
 		unlink($rar);
 		return 0;
 	}
@@ -61,7 +63,7 @@ sub checkNZB($$$) { #{{{1
 	# check for encrypted data
 	for my $line (@technical) {
 		if ($line =~ m/^\*/) {
-			DEBUG('encrypted rar');
+			$LOGGER->debug('encrypted rar');
 			unlink($rar);
 			return 0;
 		}
@@ -70,13 +72,13 @@ sub checkNZB($$$) { #{{{1
 	# check for rar-in-rar
 	for my $file (@bare_files) {
 		if ($file =~ m/\.rar$/) {
-			DEBUG('rar-in-rar');
+			$LOGGER->debug('rar-in-rar');
 			unlink($rar);
 			return 0;
 		}
 	}
 
-	DEBUG('nzb ok');
+	$LOGGER->debug('nzb ok');
 	unlink($rar);
 	return 1;
 }#}}}1
@@ -136,36 +138,36 @@ sub getFirstRAR($$) {#{{{1
 		if (defined $1) {
 			$firstRAR = File::Spec->rel2abs($TMP_DIR . '/' . $1);
 		} else {
-			DEBUG($first->{'subject'});
+			$LOGGER->debug($first->{'subject'});
 		}
 
 		my $pid = fork();
 		if (not defined $pid) {
-			ERROR('can\'t fork');
+			$LOGGER->error('can\'t fork');
 		} elsif ($pid == 0) {
 			my $absFile = File::Spec->rel2abs($firstNZB);
 
 			# download $firstNZB
 			die 'no "' . $NZB_WRAPPER . '" available' unless -e $NZB_WRAPPER;
-			DEBUG('calling "' . $NZB_WRAPPER . '" with "' . $TMP_DIR . '" and "' . $absFile . '"');
+			$LOGGER->debug('calling "' . $NZB_WRAPPER . '" with "' . $TMP_DIR . '" and "' . $absFile . '"');
 			`"$NZB_WRAPPER" "$TMP_DIR" "$absFile" > /dev/null 2> /dev/null`;
-			DEBUG('done');
+			$LOGGER->debug('done');
 			# sometimes the downloaded file name does not match our
 			# expectaion, so we have to rename the file
 			if (! -e $firstRAR) {
-				DEBUG('missing expected file "' . $firstRAR . '"');
+				$LOGGER->debug('missing expected file "' . $firstRAR . '"');
 
 				opendir(DIR, $TMP_DIR);
 				while(my $file = readdir(DIR)) {
 					my $fqfn = $TMP_DIR . '/' . $file;
-					DEBUG('checking "' . $fqfn . '"');
+					$LOGGER->debug('checking "' . $fqfn . '"');
 
 					# only process files
 					next if (! -f $fqfn);
 					# skip all nzb files
 					next if ($file =~ m/\.nzb$/);
 
-					DEBUG('renaming "' . $fqfn . '" to "' . $firstRAR . '"');
+					$LOGGER->debug('renaming "' . $fqfn . '" to "' . $firstRAR . '"');
 					rename($fqfn, $firstRAR);
 				}
 				closedir(DIR);

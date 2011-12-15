@@ -10,6 +10,8 @@ use LWP::ConnCache;
 use Log::Log4perl qw(:easy);
 use WWW::Mechanize;
 
+my $LOGGER = get_logger();
+
 sub new {
 	my $class  = shift;
 	my %params = @_;
@@ -36,7 +38,7 @@ sub downloadNZB($$$) { #{{{1
 	my $www = $self->{'www'};
 	$www->post($url, { $nzb->{'id'} => 'on', action => 'nzb' });
 	if (! $www->success) {
-		ERROR('Can\'t retrieve ' . $url . ': ' . $!);
+		$LOGGER->error('Can\'t retrieve ' . $url . ': ' . $!);
 	}
 
 	open (FH, ">$file");
@@ -45,14 +47,14 @@ sub downloadNZB($$$) { #{{{1
 } #}}}1
 sub searchNZB($$) { #{{{1
 	my ($self, $url) = @_;
-	DEBUG('url: ' . $url);
+	$LOGGER->debug('url: ' . $url);
 
 	my @nzbs;
 
 	my $www = $self->{'www'};
 	$www->get($url);
 	if (! $www->success) {
-		ERROR('Can\'t retrieve ' . $url . ': ' . $!);
+		$LOGGER->error('Can\'t retrieve ' . $url . ': ' . $!);
 		return undef;
 	}
 

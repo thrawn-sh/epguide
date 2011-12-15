@@ -11,6 +11,8 @@ use LWP::ConnCache;
 use Log::Log4perl qw(:easy);
 use WWW::Mechanize;
 
+my $LOGGER = get_logger();
+
 sub new {
 	my $class  = shift;
 	my %params = @_;
@@ -33,12 +35,12 @@ sub extract_imdb_data($$) { # {{{1
 	my ($self, $imdb_number) = @_;
 
 	my $url = 'http://www.imdb.com/title/tt' . $imdb_number . '/';
-	DEBUG('url: ' . $url);
+	$LOGGER->debug('url: ' . $url);
 
 	my $www = $self->{'www'};
 	$www->get($url);
 	if (! $www->success) {
-		ERROR('Can\'t retrieve ' . $url . ': ' . $!);
+		$LOGGER->error('Can\'t retrieve ' . $url . ': ' . $!);
 		return undef;
 	}
 
@@ -54,9 +56,9 @@ sub extract_imdb_data($$) { # {{{1
 		# <title>John Grin&#x27;s Christmas (TV 1986) - IMDb</title>
 		if (/<title>(?:IMDb - )?(.+) \((?:.+ )?(\d{4})\)(?: - IMDb)?<\/title>/) {
 			$title = HTML::Entities::decode($1);
-			DEBUG('title: ' . $title);
+			$LOGGER->debug('title: ' . $title);
 			$year = $2;
-			DEBUG('year: ' . $year);
+			$LOGGER->debug('year: ' . $year);
 		}
 
 		# 23,542 IMDb users have given an average vote of 7.0/10
@@ -64,8 +66,8 @@ sub extract_imdb_data($$) { # {{{1
 			$raters = $1;
 			$rating = $2;
 			$raters =~ s/,//;
-			DEBUG('rating: ' . $rating);
-			DEBUG('raters: ' . $raters);
+			$LOGGER->debug('rating: ' . $rating);
+			$LOGGER->debug('raters: ' . $raters);
 		}
 
 		# <a href="/genre/Drama" itemprop="genre">Drama</a>&nbsp;<span>|</span> <a href="/genre/Sci-Fi" itemprop="genre">Sci-Fi</a>
@@ -74,7 +76,7 @@ sub extract_imdb_data($$) { # {{{1
 		}
 	}
 
-	DEBUG("@genres");
+	$LOGGER->debug("@genres");
 	return {title => $title, year => $year, genres => \@genres, rating => $rating, raters => $raters, url => $url};
 } # }}}1
 

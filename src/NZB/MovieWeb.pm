@@ -10,6 +10,8 @@ use LWP::ConnCache;
 use Log::Log4perl qw(:easy);
 use WWW::Mechanize;
 
+my $LOGGER = get_logger();
+
 sub new {
 	my $class  = shift;
 	my %params = @_;
@@ -43,7 +45,7 @@ sub getMovieTitles($$$) { #{{{1
 		my $www = $self->{'www'};
 		$www->get($url);
 		if (! $www->success) {
-			WARN('Can\'t retrieve ' . $url . ': ' . $!);
+			$LOGGER->warn('Can\'t retrieve ' . $url . ': ' . $!);
 			next;
 		}
 
