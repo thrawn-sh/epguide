@@ -19,7 +19,6 @@ use NZB::IMDB;
 use NZB::Message;
 use NZB::MovieWeb;
 use NZB::NFO;
-use NZB::NZB;
 
 Log::Log4perl->easy_init($DEBUG);
 my $LOGGER = get_logger();
@@ -59,7 +58,7 @@ sub searchMovies($) { #{{{1
 
 		unless (isMovieAcceptable($movie, $genre_ratings, $minimum_rating)) {
 			$LOGGER->debug('Rating (' . $movie->{'rating'} . ') of "' . $title . '" is to bad => skipping');
-			open(NO,'>' . $noFile) or die 'Can\'t create ' . $file . ': ' . $!;
+			open(NO,'>' . $noFile) or $LOGGER->error('Can\'t create ' . $file . ': ' . $!);
 			close(NO);
 			next;
 		}
@@ -145,7 +144,7 @@ sub crawl_movies($) { #{{{1
 				$WRITER->write("\n", 'movies');
 			} else {
 				$LOGGER->debug('Rating (' . $movie->{'rating'} . ') of "' . $title . '" is to bad => skipping');
-				open(NO,'>' . $noFile) or die "Can't create new.txt: $!";
+				open(NO,'>' . $noFile) or $LOGGER->error('Can\'t create ' . $noFile . ': ' . $!);
 				close(NO);
 			}
 			
@@ -341,7 +340,10 @@ sub sendMails($$$) { #{{{1
 	my $notify = $CFG->{'notify'};
 	for my $reciever (@{$notify->{$id}}) {
 		my %mail = (From => $CFG->{'sender'}, To => $reciever, Subject => $subject, Message => $message);
-		sendmail(%mail) or die $Mail::Sendmail::error;
+		unless (sendmail(%mail)) {
+			 $LOGGER->error('Could not send mail: ' . $Mail::Sendmail::error);
+			 next;
+		}
 		$LOGGER->debug($Mail::Sendmail::log);
 		$WRITER->write('mail for ' . $id . ' sent to ' . $reciever . "\n", undef);
 	}
