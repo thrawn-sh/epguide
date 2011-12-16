@@ -11,13 +11,13 @@ $SIG{TERM} = $SIG{INT} = $SIG{QUIT} = $SIG{HUP} = sub { die; };
 use File::Basename;
 use File::Spec;
 use File::Temp;
-use Log::Log4perl qw(:easy);
+use Log::Log4perl;
 use NZB::Binsearch;
 use NZB::NZB;
 
 File::Temp->safe_level(File::Temp::HIGH);
 
-my $LOGGER = get_logger();
+my $LOGGER = Log::Log4perl->get_logger();
 
 sub new {
 	my $class  = shift;

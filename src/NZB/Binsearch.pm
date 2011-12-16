@@ -9,10 +9,10 @@ use Crypt::SSLeay;
 use File::Basename;
 use File::Path;
 use LWP::ConnCache;
-use Log::Log4perl qw(:easy);
+use Log::Log4perl;
 use WWW::Mechanize;
 
-my $LOGGER = get_logger();
+my $LOGGER = Log::Log4perl->get_logger();
 
 sub new {
 	my $class  = shift;

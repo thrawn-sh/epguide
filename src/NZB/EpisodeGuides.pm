@@ -8,10 +8,10 @@ use warnings FATAL => 'all';
 use Date::Calc qw( Add_Delta_Days Today Date_to_Time );
 use Date::Parse;
 use LWP::ConnCache;
-use Log::Log4perl qw(:easy);
+use Log::Log4perl;
 use WWW::Mechanize;
 
-my $LOGGER = get_logger();
+my $LOGGER = Log::Log4perl->get_logger();
 
 sub new {
 	my $class  = shift;
