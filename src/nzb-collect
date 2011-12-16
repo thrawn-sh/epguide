@@ -145,7 +145,7 @@ sub cleanup() { #{{{1
 			my $sb    = stat($dir . '/' . $file);
 			my $mtime = $sb->mtime();
 
-			if ($file =~ m/^serie/) {
+			if ($file =~ m/^serie-/) {
 				if ($mtime < $series_keep) {
 					$LOGGER->debug('cleaning old serie: ' . $file);
 					unlink($dir . '/' . $file);
