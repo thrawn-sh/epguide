@@ -4,7 +4,6 @@
 	# GENERAL
 	#
 
-	'debug'   => 0,
 	'nzbage'  => 10,
 	'nzbdir'  => 'nzbdata',
 	'speed'   => 1000, # kb/s
@@ -51,16 +50,15 @@
 
 	# genre   = imdb genre (lowercase) [full list at http://www.imdb.com/genre/]
 	# minimum = minimum rating for this genre
-	'movie_genre_ratings' =>
+	'movies_genre_ratings' =>
 		{
 #			'thriller' => 5,
 		},
 
-	'movie_group'          => 'alt.binaries.boneless',
-	'movie_max_size'       => 5000,
-	'movie_min_size'       => 1000,
-	'movie_rating'         => 6,
-	'movie_release_weeks'  => 24,
-	'movie_search_enabled' => 1,
-	'movie_search_weeks'   => 4,
+	'movies_group'          => 'alt.binaries.boneless',
+	'movies_max_size'       => 5000,
+	'movies_min_size'       => 1000,
+	'movies_rating'         => 6,
+	'movies_search_enabled' => 1,
+	'movies_search_weeks'   => 4,
 );

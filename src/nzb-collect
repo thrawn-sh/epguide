@@ -5,7 +5,7 @@ package NZB;
 use strict;
 use warnings FATAL => 'all';
 
-use Date::Calc qw( Add_Delta_Days Date_to_Time Today Week_of_Year );
+use Date::Calc qw( Add_Delta_Days Date_to_Time Today );
 use File::stat;
 use Getopt::Long;
 use Log::Log4perl qw(:easy);
@@ -33,11 +33,11 @@ sub crawl_movies($) { #{{{1
 	my $nfo       = NZB::NFO->new();
 
 	my %blacklist      = map { $_ => 1 } @{$CFG->{'blacklist'}};
-	my $genre_ratings  = $CFG->{'movie_genre_ratings'};
-	my $group          = $CFG->{'movie_group'};
-	my $max_size       = $CFG->{'movie_max_size'};
-	my $min_size       = $CFG->{'movie_min_size'};
-	my $minimum_rating = $CFG->{'movie_rating'};
+	my $genre_ratings  = $CFG->{'movies_genre_ratings'};
+	my $group          = $CFG->{'movies_group'};
+	my $max_size       = $CFG->{'movies_max_size'};
+	my $min_size       = $CFG->{'movies_min_size'};
+	my $minimum_rating = $CFG->{'movies_rating'};
 	my $nzbage         = $CFG->{'nzbage'};
 
 	my $nzbs = $binsearch->searchNZBQuery($query, $group, $min_size, $max_size, $nzbage);
@@ -103,7 +103,7 @@ sub crawl_series() { #{{{1
 				my $episodeID = $episode . ($hd ? '-HD' : '');
 				$LOGGER->debug($serieID . ': ' . $episodeID);
 
-				my $file = $CFG->{'nzbdir'} . '/' . $serieID . '_' . $episodeID . '.nzb';
+				my $file = $CFG->{'nzbdir'} . '/serie-' . $serieID . '_' . $episodeID . '.nzb';
 				if (-e $file) {
 					$LOGGER->debug('episode already checked => skipping');
 					next;
@@ -124,18 +124,27 @@ sub crawl_series() { #{{{1
 } #}}}1 
 
 sub cleanup() { #{{{1
-	my @today        = Today();
-	my $search_weeks = ($CFG->{'series_search_weeks'}, $CFG->{'movie_search_weeks'})[$CFG->{'series_search_weeks'} < $CFG->{'movie_search_weeks'}];
-	my $keep_date    = Date_to_Time(Add_Delta_Days(@today, $search_weeks * 2 * -7), 0, 0, 0);
+	my @today       = Today();
+	my $movies_keep = Date_to_Time(Add_Delta_Days(@today, ($CFG->{'movies_search_weeks'} + 4) * -7), 0, 0, 0);
+	my $series_keep = Date_to_Time(Add_Delta_Days(@today, ($CFG->{'series_search_weeks'} + 4) * -7), 0, 0, 0);
 
 	my $dir = ${CFG}->{'nzbdir'};
 	opendir(DIR, $dir) or die $!;
 	while (my $file = readdir(DIR)) {
 		if (($file =~ m/.+\.nzb$/) or ($file =~ m/.+\.NO$/)) {
-			my $sb = stat($dir . '/' . $file);
-			if ($sb->mtime < $keep_date) {
-				$LOGGER->debug('cleaning old nzb: ' . $file);
-				unlink($dir . '/' . $file);
+			my $sb    = stat($dir . '/' . $file);
+			my $mtime = $sb->mtime();
+
+			if ($file =~ m/^serie/) {
+				if ($mtime < $series_keep) {
+					$LOGGER->debug('cleaning old serie: ' . $file);
+					unlink($dir . '/' . $file);
+				}
+			} else {
+				if ($mtime < $movies_keep) {
+					$LOGGER->debug('cleaning old movie: ' . $file);
+					unlink($dir . '/' . $file);
+				}
 			}
 		}
 	}
@@ -250,6 +259,9 @@ sub parseCMDL { # {{{1
 } # }}}1
 sub processNotifications() { #{{{1
 	my $from = $CFG->{'sender'};
+
+	$WRITER->write("\n", undef);
+
 	for my $serie (@{$CFG->{'series'}}) {
 		my $serieID = $serie->{'id'};
 		my $message = $WRITER->getMessageForBox($serieID);
@@ -281,7 +293,7 @@ sub sendMails($$$) { #{{{1
 			 next;
 		}
 		$LOGGER->debug($Mail::Sendmail::log);
-		$WRITER->write('mail for ' . $id . ' sent to ' . $reciever . "\n", undef);
+		$WRITER->write('Mail for ' . $id . ' sent to "' . $reciever . '".' . "\n", undef);
 	}
 }#}}}1
 
@@ -290,8 +302,7 @@ if ($CFG->{'series_search_enabled'}) {
 	crawl_series();
 }
 
-
-if ($CFG->{'movie_search_enabled'}) {
+if ($CFG->{'movies_search_enabled'}) {
 	foreach my $query ('brrip', 'dvdrip') {
 		$LOGGER->debug('searching for movies (' . $query . ')');
 		crawl_movies($query);
