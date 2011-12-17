@@ -18,9 +18,17 @@ sub new {
 	return $self;
 }
 
-sub getMessageForBox($) {
+sub getMessageForBox($$) {
 	my ($self, $boxName) = @_;
 	return $self->{'messages'}->{$boxName};
+}
+
+sub hasMessages($) {
+	my ($self) = @_;
+
+	my $messages = $self->{'messages'};
+	my $size     = scalar keys %$messages;
+	return ($size > 0);
 }
 
 sub write($$$) {

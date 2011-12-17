@@ -270,6 +270,7 @@ sub parseCMDL { # {{{1
 sub processNotifications() { #{{{1
 	my $from = $CFG->{'sender'};
 
+	return unless $WRITER->hasMessages();
 	$WRITER->write("\n", undef);
 
 	for my $serie (@{$CFG->{'series'}}) {
