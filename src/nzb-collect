@@ -107,7 +107,7 @@ sub crawl_series() { #{{{1
 	for my $serie (@{$CFG->{'series'}}) {
 		my $serieID = $serie->{'id'};
 		my $name = $serie->{'name'};
-		my $file = $name;
+		my $file = lc($name);
 		$file =~ s/\s+/_/g;
 
 		my $episodes = $epGuides->getEpisodes($serieID, $search_weeks);
