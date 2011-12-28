@@ -9,6 +9,7 @@ use Date::Calc qw( Add_Delta_Days Today Date_to_Time );
 use Date::Parse;
 use LWP::ConnCache;
 use Log::Log4perl;
+use Text::CSV;
 use WWW::Mechanize;
 
 my $LOGGER = Log::Log4perl->get_logger();
@@ -32,14 +33,15 @@ sub new {
 }
 
 sub getEpisodes($$$) { #{{{1
-	my ($self, $serie, $search_weeks) = @_;
+	my ($self, $serieID, $search_weeks) = @_;
 
 	my @episodes;
 	my @today = Today();
 	my $nzb_end_date   = Date_to_Time(@today, 0, 0, 0);
 	my $nzb_start_date = Date_to_Time(Add_Delta_Days(@today, $search_weeks * -7), 0, 0, 0);
 
-	my $url = 'http://epguides.com/' . $serie . '/';
+	my $url = 'http://epguides.com/common/exportToCSV.asp?rage=' . $serieID;
+	$LOGGER->debug('url: ' . $url);
 
 	my $www = $self->{'www'};
 	$www->get($url);
@@ -48,27 +50,42 @@ sub getEpisodes($$$) { #{{{1
 		return undef;
 	}
 
-	for (split("\n", $www->content())) {
-		if (/\s+(\d{1,2})-(\d{1,2})\s+(?:\S+\s+){0,1}(\d{2}.\w{3}.\d{2})/) {
-			my $season   = $1;
-			my $episode  = $2;
-			my $released = $3;
-			$released =~ s# #/#g;
-			my @dateparts = split(/\//,$released);
-			if ($dateparts[2] < 100) {
-				$dateparts[2] += 2000;
-			}
-			$released = join('/', @dateparts);
-			$released = str2time($released);
+	my $csv = Text::CSV->new({ binary => 1});
 
-			if (($nzb_start_date <= $released) and ($released <= $nzb_end_date)) {
-				my $episodeID = sprintf("S%02dE%02d", $season, $episode);
-				push(@episodes, $episodeID);
-			}
+	my $header = 0;
+	for my $line (split("\n", $www->text())) {
+		unless ($csv->parse($line)) {
+			next;
+		}
+		unless ($header) {
+			$header = 1;
+			next;
+		}
+
+		my @fields = $csv->fields();
+		my $season   = $fields[1];
+		my $episode  = $fields[2];
+		my $released = $fields[4];
+		$released =~ s# #/#g;
+
+		my @dateparts = split(/\//,$released);
+		unless (scalar(@dateparts) == 3) {
+			$LOGGER->error('Incomplete release date : ' . $released . ' => skipping');
+			next;
+		}
+
+		if ($dateparts[2] < 100) {
+			$dateparts[2] += 2000;
+		}
+		$released = join('/', @dateparts);
+		$released = str2time($released);
+
+		if (($nzb_start_date <= $released) and ($released <= $nzb_end_date)) {
+			my $episodeID = sprintf("S%02dE%02d", $season, $episode);
+			push(@episodes, $episodeID);
 		}
 	}
 
 	return \@episodes;
 } #}}}1
-
 1;

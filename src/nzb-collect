@@ -106,14 +106,17 @@ sub crawl_series() { #{{{1
 
 	for my $serie (@{$CFG->{'series'}}) {
 		my $serieID = $serie->{'id'};
+		my $name = $serie->{'name'};
+		my $file = $name;
+		$file =~ s/\s+/_/g;
 
 		my $episodes = $epGuides->getEpisodes($serieID, $search_weeks);
 		for my $episode (@$episodes) {
 			foreach my $hd (0, 1) {
 				my $episodeID = $episode . ($hd ? '-HD' : '');
-				$LOGGER->debug($serieID . ': ' . $episodeID);
+				$LOGGER->debug($name . ': ' . $episodeID);
 
-				my $file = $CFG->{'nzbdir'} . '/serie-' . $serieID . '_' . $episodeID . '.nzb';
+				my $file = $CFG->{'nzbdir'} . '/serie-' . $file . '_' . $episodeID . '.nzb';
 				if (-e $file) {
 					$LOGGER->debug('episode already checked => skipping');
 					next;
@@ -277,8 +280,7 @@ sub processNotifications() { #{{{1
 		my $serieID = $serie->{'id'};
 		my $message = $WRITER->getMessageForBox($serieID);
 		if ($message) {
-			my $title = $serie->{'query'};
-			$title =~ s/\+/ /g;
+			my $title = $serie->{'name'};
 			
 			my $prefix = "Hi\n\nHave you seen, that the new episodes of $title have aired in the US? Can't wait to view them on TV.\n\n";
 			my $suffix = "\ncu\n\tAlex\n";

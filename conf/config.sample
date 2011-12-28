@@ -30,15 +30,15 @@
 	# SERIES
 	#
 
-	# id        = folder name on http://epguides.com/
-	# query     = series names to search for on http://binsearch.info/ (separate words by '+')
+	# id        = id for http://epguides.com/ (see http://epguides.com/common/allshows.txt column 3)
+	# name      = series name (will be used to search for on http://binsearch.info/)
 	# group     = newsgroup to search for posts
 	# min       = minimal size of nzb collection (MB)
 	# threshold = size of nzb collection (MB), that determines if the series is in HD quality
 	# max       = maximal size of nzb collection (MB)
 	'series' =>
 		[
-#			{ id => '24', query => '24', group => 'alt.binaries.multimedia', min => 350, threshold => 800, max => 2000 },
+#			{ id => '8511', query => 'Big Bang Theory', group => 'alt.binaries.multimedia', min => 350, threshold => 800, max => 2000 },
 		]
 	
 	'series_search_enabled' => 1,

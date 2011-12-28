@@ -123,7 +123,10 @@ sub searchNZBSerie($$$$$) { #{{{1
 		$url .= '&minsize=' . $serie->{'min'} .
 		        '&maxsize=' . $serie->{'threshold'};
 	}
-	$url .= '&q=' . $serie->{'query'} . '+' . $episode;
+
+	my $query = $serie->{'name'};
+	$query =~ s/\s+/+/g;
+	$url .= '&q=' . $query . '+' . $episode;
 
 	return $self->searchNZB($url);
 } #}}}1
