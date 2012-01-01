@@ -126,7 +126,7 @@ sub crawl_series() { #{{{1
 				$LOGGER->debug('found potential ' . scalar(@$nzbs) . ' nzbs');
 
 				if (download($binsearch, $check, $nzbs, $file, \%blacklist)) {
-					$WRITER->write(' - ' . ' Episode: ' . $episodeID . "\n", $serieID);
+					$WRITER->write(' - ' . ' Episode: ' . $name . ' ' . $episodeID . "\n", $serieID);
 					$WRITER->write('   ' . '     NZB: ' . $file . "\n", undef);
 				} else {
 					$LOGGER->debug('no nzb found');
