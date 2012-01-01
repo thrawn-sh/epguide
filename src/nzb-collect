@@ -309,6 +309,29 @@ sub sendMails($$$) { #{{{1
 		$WRITER->write('Mail for ' . $id . ' sent to "' . $reciever . '".' . "\n", undef);
 	}
 }#}}}1
+sub validateNotificationSubscriptions() { #{{{1
+	my $sIds = ();
+	for my $serie (@{$CFG->{'series'}}) {
+		my $id = $serie->{'id'};
+		$sIds->{$id} = 1;
+	}
+
+	my $listPossibleSubscriptins = 0;
+	my $notify = $CFG->{'notify'};
+	for my $entry (sort keys %$notify) {
+		next if ($entry eq 'movies');
+		next if ($sIds->{$entry});
+		$LOGGER->warn('subscription for ' . $entry . ' is not collected.');
+		$listPossibleSubscriptins = 1;
+	}
+
+	if ($listPossibleSubscriptins) {
+		my $seriesSubscriptions = join(', ', sort { $a <=> $b } keys %$sIds);
+		$LOGGER->warn('possible subscriptions are: movies, ' . $seriesSubscriptions);
+	}
+} #}}}1
+
+validateNotificationSubscriptions();
 
 if ($CFG->{'series_search_enabled'}) {
 	$LOGGER->debug('searching for series');
