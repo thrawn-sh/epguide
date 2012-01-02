@@ -50,7 +50,7 @@ sub getEpisodes($$$) { #{{{1
 		return undef;
 	}
 
-	my $csv = Text::CSV->new({ binary => 1});
+	my $csv = Text::CSV->new({ binary => 1 });
 
 	my $header = 0;
 	for my $line (split("\n", $www->text())) {
@@ -70,7 +70,7 @@ sub getEpisodes($$$) { #{{{1
 
 		my @dateparts = split(/\//,$released);
 		unless (scalar(@dateparts) == 3) {
-			$LOGGER->error('Incomplete release date : ' . $released . ' => skipping');
+			$LOGGER->info('Incomplete release date : ' . $released . ' => skipping');
 			next;
 		}
 
