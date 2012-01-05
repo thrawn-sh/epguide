@@ -1,3 +1,4 @@
+*.log
+/conf/config
 /src/nzb_wrapper.sh
 /src/wrapper/*.conf
-/conf/config
