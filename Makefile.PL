@@ -26,9 +26,9 @@ WriteMakefile(
 		'Mail::Sendmail'	=> 0.79,
 		'Text::CSV'		=> 1.21,
 		'Time::ParseDate'	=> 2011.0517,
-		'WWW::Mechanize'	=> 1.68,
+		'WWW::Mechanize::GZip'	=> 0.12,
 		'XML::DOM'		=> 1.44,
 	},
-	VERSION		=> strftime('%Y%m%d.%H%M%S', localtime),
+	VERSION		=> strftime('%Y.%m%d', localtime),
 #	ABSTRACT_FROM	=> 'lib/Foo/Bar.pm', # retrieve abstract from module
 );

@@ -14,6 +14,7 @@ use File::Temp;
 use Log::Log4perl;
 use NZB::Binsearch;
 use NZB::NZB;
+use WWW::Mechanize::GZip;
 
 File::Temp->safe_level(File::Temp::HIGH);
 
@@ -23,7 +24,7 @@ sub new {
 	my $class  = shift;
 	my %params = @_;
 
-	my $www = WWW::Mechanize->new(ssl_opts => { verify_hostname => 0 });
+	my $www = WWW::Mechanize::GZip->new(autocheck => 1, ssl_opts => { verify_hostname => 0 });
 	$www->agent_alias('Windows IE 6');
 	$www->conn_cache(LWP::ConnCache->new);
 	$www->default_header('Accept-Encoding' => 'deflate,gzip');

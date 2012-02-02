@@ -10,7 +10,7 @@ use File::Basename;
 use File::Path;
 use LWP::ConnCache;
 use Log::Log4perl;
-use WWW::Mechanize;
+use WWW::Mechanize::GZip;
 
 my $LOGGER = Log::Log4perl->get_logger();
 
@@ -18,7 +18,7 @@ sub new {
 	my $class  = shift;
 	my %params = @_;
 
-	my $www = WWW::Mechanize->new(ssl_opts => { verify_hostname => 0 });
+	my $www = WWW::Mechanize::GZip->new(autocheck => 1, ssl_opts => { verify_hostname => 0 });
 	$www->agent_alias('Windows IE 6');
 	$www->conn_cache(LWP::ConnCache->new);
 	$www->default_header('Accept-Encoding' => 'deflate,gzip');
