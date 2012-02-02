@@ -1,6 +1,10 @@
 MANIFEST
+MANIFEST.SKIP
 Makefile.PL
 bin/nzb-collect
+bin/wrapper/nzbget
+etc/nzb-collect.sample
+etc/nzbget.conf.sample
 lib/NZB/Binsearch.pm
 lib/NZB/Check.pm
 lib/NZB/EpisodeGuides.pm
