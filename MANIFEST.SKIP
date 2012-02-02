@@ -1,5 +1,6 @@
-.+\.tar\.gz
 \.git
 \.gitignore
+.+\.tar\.gz
 Makefile
+debian
 test
