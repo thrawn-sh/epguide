@@ -2,3 +2,5 @@
 /conf/config
 /src/nzb_wrapper.sh
 /src/wrapper/*.conf
+/src/Makefile
+/src/*.tar.gz
