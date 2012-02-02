@@ -1,0 +1,32 @@
+Source: nzb-collect
+Section: perl
+Priority: optional
+Maintainer: Shadowhunt Package <package@shadowhunt.de>
+Build-Depends: debhelper (>= 8)
+Build-Depends-Indep: perl,
+ libcrypt-ssleay-perl,
+ libfile-temp-perl,
+ libio-compress-perl,
+ liblog-log4perl-perl,
+ libmail-sendmail-perl,
+ libtext-csv-perl,
+ libwww-mechanize-gzip-perl,
+ libxml-dom-perl
+Standards-Version: 3.9.2
+
+Package: nzb-collect
+Architecture: all
+Depends: ${perl:Depends}, ${misc:Depends},
+ libcrypt-ssleay-perl,
+ libfile-temp-perl,
+ libio-compress-perl,
+ liblog-log4perl-perl,
+ libmail-sendmail-perl,
+ libtext-csv-perl,
+ libwww-mechanize-gzip-perl,
+ libxml-dom-perl
+Recommends: nzbget
+Description: lightweight news tracker
+ nzb-collect is a lightweight binary news tracker, that uses various free
+ online platforms to keep you informed about binary news.
+ .
