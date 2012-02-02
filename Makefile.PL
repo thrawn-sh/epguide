@@ -8,7 +8,7 @@ eval 'use ExtUtils::MakeMaker::Coverage';
 
 WriteMakefile(
 	AUTHOR		=> 'Thrawn <thrawn@shadowhunt.de>',
-#	EXE_FILES	=> [ 'bin/nzb-collect' ],
+	EXE_FILES	=> [ 'bin/nzb-collect' ],
 	LICENSE		=> 'perl',
 	NAME		=> 'NZB::Collect',
 	PREREQ_PM	=> {
@@ -30,5 +30,4 @@ WriteMakefile(
 		'XML::DOM'		=> 1.44,
 	},
 	VERSION		=> strftime('%Y.%m%d', localtime),
-#	ABSTRACT_FROM	=> 'lib/Foo/Bar.pm', # retrieve abstract from module
 );
