@@ -1,4 +1,5 @@
-.git
-.gitignore
+.+\.tar\.gz
+\.git
+\.gitignore
 Makefile
 test
