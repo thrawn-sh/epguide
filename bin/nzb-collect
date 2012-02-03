@@ -255,7 +255,7 @@ sub parseCMDL { # {{{1
 		print "    --help:    print this help.\n";
 		print "    --output:  write progress and messages to this file (default: STDOUT).\n";
 		print "    --speed:   limit download spead to this (kb/s).\n";
-		print "    --wrapper: call thsi wrapper script for downloading.\n";
+		print "    --wrapper: call this wrapper script for downloading.\n";
 		exit 0;
 	}
 
