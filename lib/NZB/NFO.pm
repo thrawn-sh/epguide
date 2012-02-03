@@ -19,7 +19,6 @@ sub new {
 	my $www = WWW::Mechanize::GZip->new(autocheck => 1, ssl_opts => { verify_hostname => 0 });
 	$www->agent_alias('Windows IE 6');
 	$www->conn_cache(LWP::ConnCache->new);
-	$www->default_header('Accept-Encoding' => 'deflate,gzip');
 	$www->default_header('Accept-Language' => 'en');
 
 	my $self = {
