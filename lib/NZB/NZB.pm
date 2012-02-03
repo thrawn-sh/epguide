@@ -7,6 +7,44 @@ use warnings FATAL => 'all';
 
 use XML::DOM;
 
+sub createNZB($$$) { #{{{1
+	my ($self, $files, $output) = @_;
+
+	my $xml = XML::DOM::Document->new;
+	my $nzbElement = $xml->createElement('nzb');
+
+	for my $file (@$files) {
+		my $fileElement = $xml->createElement('file');
+		$fileElement->setAttribute('date',    $file->{'date'});
+		$fileElement->setAttribute('poster',  $file->{'poster'});
+		$fileElement->setAttribute('subject', $file->{'subject'});
+
+		my $groupsElement = $xml->createElement('groups');
+		for my $group (@{$file->{'groups'}}) {
+			my $groupElement = $xml->createElement('group');
+			$groupElement->appendChild($xml->createTextNode($group));
+			$groupsElement->appendChild($groupElement);
+		}
+		$fileElement->appendChild($groupsElement);
+
+		my $segmentsElement = $xml->createElement('segments');
+		for my $segment (@{$file->{'segments'}}) {
+			my $segmentElement = $xml->createElement('segment');
+			$segmentElement->setAttribute('bytes',  $segment->{'size'});
+			$segmentElement->setAttribute('number', $segment->{'number'});
+			$segmentElement->appendChild($xml->createTextNode($segment->{'id'}));
+
+			$segmentsElement->appendChild($segmentElement);
+		}
+		$fileElement->appendChild($segmentsElement);
+
+		$nzbElement->appendChild($fileElement);
+	}
+
+	open (FH, ">$output");
+	print FH $nzbElement->toString;
+	close (FH);
+} #}}}1
 sub parseNZB($$) { #{{{1
 	my ($self, $nzbfile) = @_;
 	my $parser = XML::DOM::Parser->new();
