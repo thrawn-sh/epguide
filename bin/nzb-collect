@@ -227,21 +227,17 @@ sub parseCMDL { # {{{1
 		"config=s"  => \$config,
 		"dir=s"     => \$nzbdir,
 		"help!"     => \$help,
-		"nzbage=i"  => \$nzbage,
 		"output=s"  => \$output,
 		"speed=i"   => \$speed,
-		"wrapper=s" => \$wrapper,
 	);
 
 	if ($help) {
 		print $0 . ': <OPTIONS>' . "\n";
-		print "    --nzbage:  TODO\n";
 		print "    --config:  filename of the configuration-file to read.\n";
 		print "    --dir:     diretory to output the nzb files to.\n";
 		print "    --help:    print this help.\n";
 		print "    --output:  write progress and messages to this file (default: STDOUT).\n";
 		print "    --speed:   limit download spead to this (kb/s).\n";
-		print "    --wrapper: call this wrapper script for downloading.\n";
 		exit 0;
 	}
 
@@ -253,12 +249,9 @@ sub parseCMDL { # {{{1
 	eval $content or die "could not slurp in $config: $!";
 
 	# overriding config values by commandline values (won't be saved)
-	if (defined $nzbage)  { $CFG{'nzbage'}   = $nzbage;  }
-	if (defined $nzbdir)  { $CFG{'nzbdir'}   = $nzbdir;  }
-	if (defined $speed)   { $CFG{'speed'}    = $speed;   }
-	if (defined $wrapper) { $CFG{'wrapper'}  = $wrapper; }
-
-	if (defined $output) {
+	if (defined $nzbdir)  { $CFG{'nzbdir'}   = $nzbdir; }
+	if (defined $speed)   { $CFG{'speed'}    = $speed;  }
+	if (defined $output)  {
 		open(OUTPUT, ">", $output) or die "could not open $output: $!";
 		$CFG{'output'} = *OUTPUT;
 	} else {
