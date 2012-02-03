@@ -49,7 +49,7 @@ sub crawl_movies($) { #{{{1
 	my ($query) = @_;
 
 	my $binsearch = NZB::Binsearch->new();
-	my $check     = NZB::Check->new(binsearch => $binsearch, speed => $CFG->{'speed'}, wrapper => $CFG->{'wrapper'});
+	my $check     = NZB::Check->new(binsearch => $binsearch, speed => $CFG->{'speed'}, wrapper => $CFG->{'wrapper'}, wrapper_cfg => $CFG->{'wrapper_cfg'});
 	my $imdb      = NZB::IMDB->new();
 	my $nfo       = NZB::NFO->new();
 
@@ -108,7 +108,7 @@ sub crawl_movies($) { #{{{1
 } #}}}1
 sub crawl_series() { #{{{1
 	my $binsearch = NZB::Binsearch->new();
-	my $check     = NZB::Check->new(binsearch => $binsearch, speed => $CFG->{'speed'}, wrapper => $CFG->{'wrapper'});
+	my $check     = NZB::Check->new(binsearch => $binsearch, speed => $CFG->{'speed'}, wrapper => $CFG->{'wrapper'}, wrapper_cfg => $CFG->{'wrapper_cfg'});
 	my $epGuides  = NZB::EpisodeGuides->new();
 
 	my $nzbage         = $CFG->{'nzbage'};

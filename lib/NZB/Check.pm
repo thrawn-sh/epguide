@@ -30,11 +30,12 @@ sub new {
 	$www->default_header('Accept-Language' => 'en');
 
 	my $self = {
-		binsearch => $params{'binsearch'},
-		speed     => 10 * 1000, # 10 kb/s
-		tmp_dir   => File::Temp->newdir(File::Spec->tmpdir() . '/nzb_XXXXX', UNLINK => 1),
-		unrar     => 'unrar',
-		wrapper   => dirname($0) . '/nzb_wrapper.sh',
+		binsearch     => $params{'binsearch'},
+		speed         => 10 * 1000, # 10 kb/s
+		tmp_dir       => File::Temp->newdir(File::Spec->tmpdir() . '/nzb_XXXXX', UNLINK => 1),
+		unrar         => 'unrar',
+		wrapper       => dirname($0) . '/nzb_wrapper.sh',
+		wrapper_cfg   => dirname($0) . '/nzb_wrapper.cfg',
 	};
 
 	my $speed = $params{'speed'};
@@ -43,6 +44,8 @@ sub new {
 	$self->{'unrar'} = $unrar if defined $unrar;
 	my $wrapper = $params{'wrapper'};
 	$self->{'wrapper'} = $wrapper if defined $wrapper;
+	my $wrapper_cfg = $params{'wrapper_cfg'};
+	$self->{'wrapper_cfg'} = $wrapper_cfg if defined $wrapper_cfg;
 
 	bless $self, $class;
 	return $self;
@@ -175,11 +178,12 @@ sub getFirstRAR($$) {#{{{1
 		} elsif ($pid == 0) {
 			my $absFile = File::Spec->rel2abs($firstNZB);
 
-			my $wrapper = $self->{'wrapper'};
+			my $wrapper     = $self->{'wrapper'};
+			my $wrapper_cfg = $self->{'wrapper_cfg'};
 			# download $firstNZB
 			die 'no "' . $wrapper . '" available' unless -e $wrapper;
-			$LOGGER->debug('calling "' . $wrapper . '" with "' . $tmp_dir . '" and "' . $absFile . '"');
-			`"$wrapper" "$tmp_dir" "$absFile" > /dev/null 2> /dev/null`;
+			$LOGGER->debug('calling "' . $wrapper . '" with "' . $tmp_dir . '" and "' . $absFile . '" and "' . $wrapper_cfg . '"');
+			`"$wrapper" "$tmp_dir" "$absFile" "$wrapper_cfg" > /dev/null 2> /dev/null`;
 			$LOGGER->debug('done');
 			# sometimes the downloaded file name does not match our
 			# expectaion, so we have to rename the file
