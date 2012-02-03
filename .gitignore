@@ -1,8 +1,8 @@
-*.log
 *.tar.gz
+/Makefile
 /blib
 /debian/files
+/debian/nzb-collect.debhelper.log
 /debian/nzb-collect.substvars
 /debian/nzb-collect/
 /pm_to_blib
-Makefile
