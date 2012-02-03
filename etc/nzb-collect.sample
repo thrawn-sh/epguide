@@ -4,10 +4,11 @@
 	# GENERAL
 	#
 
-	'nzbage'  => 10,
-	'nzbdir'  => 'nzbdata',
-	'speed'   => 1000, # kb/s
-	'wrapper' => 'nzb_wrapper.sh',
+	'nzbage'      => 10,
+	'nzbdir'      => 'nzbdata',
+	'speed'       => 1000, # kb/s
+	'wrapper'     => 'nzb_wrapper.sh',
+	'wrapper_cfg' => 'nzbget.conf',
 
 	# list of posters, we don't want nzbs from
 	'blacklist' =>
