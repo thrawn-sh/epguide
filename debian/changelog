@@ -1,3 +1,11 @@
+nzb-collect (2012.0203) oneiric; urgency=low
+
+  * Added global default log4perl file and system logging folder
+  * Added nzbget wrapper
+  * Added nzbget_wrapper example config
+
+ -- Shadowhunt Package <package@shadowhunt.de>  Fri, 03 Feb 2012 16:50:35 +0100
+
 nzb-collect (2011.0202) unstable; urgency=low
 
   * Initial Release.
