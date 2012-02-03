@@ -221,7 +221,6 @@ sub parseCMDL { # {{{1
 	my $nzbdir;
 	my $output;
 	my $speed;
-	my $wrapper;
 
 	my $result = GetOptions(
 		"config=s"  => \$config,
