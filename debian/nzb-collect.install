@@ -1,0 +1,2 @@
+debian/etc /
+bin/wrapper/nzbget /usr/share/nzb-collect/
