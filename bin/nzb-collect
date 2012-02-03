@@ -124,7 +124,7 @@ sub crawl_series() { #{{{1
 		my $episodes = $epGuides->getEpisodes($serieID, $search_weeks);
 		for my $episode (@$episodes) {
 			foreach my $hd (0, 1) {
-				my $episodeID = $episode . ($hd ? '-HD' : '');
+				my $episodeID = $episode . ($hd ? '-hd' : '');
 				$LOGGER->debug($name . ': ' . $episodeID);
 
 				my $file = $CFG->{'nzbdir'} . '/serie-' . $file . '_' . $episodeID . '.nzb';

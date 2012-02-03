@@ -81,7 +81,7 @@ sub getEpisodes($$$) { #{{{1
 		$released = str2time($released);
 
 		if (($nzb_start_date <= $released) and ($released <= $nzb_end_date)) {
-			my $episodeID = sprintf("S%02dE%02d", $season, $episode);
+			my $episodeID = sprintf("s%02de%02d", $season, $episode);
 			push(@episodes, $episodeID);
 		}
 	}
