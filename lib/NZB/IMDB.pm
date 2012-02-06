@@ -76,7 +76,7 @@ sub extract_imdb_data($$) { # {{{1
 	}
 
 	$LOGGER->debug("@genres");
-	return {title => $title, year => $year, genres => \@genres, rating => $rating, raters => $raters, url => $url};
+	return {id => $imdb_number, title => $title, year => $year, genres => \@genres, rating => $rating, raters => $raters, url => $url};
 } # }}}1
 
 1;
