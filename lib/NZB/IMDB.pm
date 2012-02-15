@@ -70,7 +70,7 @@ sub extract_imdb_data($$) { # {{{1
 		}
 
 		# <a href="/genre/Drama" itemprop="genre">Drama</a>&nbsp;<span>|</span> <a href="/genre/Sci-Fi" itemprop="genre">Sci-Fi</a>
-		while (s{<a href=\"/genre/([^"]+)"}{}) {
+		while (s{<a [^>]*href=\"/genre/([^"]+)"}{}) {
 			push(@genres, HTML::Entities::decode($1));
 		}
 	}
