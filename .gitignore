@@ -1,5 +1,6 @@
 *.tar.gz
 /Makefile
+/Makefile.old
 /blib
 /debian/files
 /debian/nzb-collect.debhelper.log
