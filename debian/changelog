@@ -2,6 +2,7 @@ nzb-collect (2012.0215) oneiric; urgency=low
 
   * Added debugging to the IMDB module
   * Bugfix IMDB generes are now retrieved again
+  * Added IMDB cache
 
  -- Shadowhunt Package <package@shadowhunt.de>  Wed, 15 Feb 2012 14:42:25 +0100
 

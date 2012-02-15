@@ -35,7 +35,7 @@ sub crawl_movies($) { #{{{1
 
 	my $binsearch = NZB::Binsearch->new();
 	my $check     = NZB::Check->new(binsearch => $binsearch, speed => $CFG->{'speed'}, wrapper => $CFG->{'wrapper'}, wrapper_cfg => $CFG->{'wrapper_cfg'});
-	my $imdb      = NZB::IMDB->new();
+	my $imdb      = NZB::IMDB->new(dir => $CFG->{'nzbdir'});
 	my $nfo       = NZB::NFO->new();
 
 	my %blacklist      = map { $_ => 1 } @{$CFG->{'blacklist'}};

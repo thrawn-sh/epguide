@@ -24,6 +24,7 @@ WriteMakefile(
 		'LWP::ConnCache'	=> 3.68,
 		'Log::Log4perl'		=> 1.29,
 		'Mail::Sendmail'	=> 0.79,
+		'Storable'		=> 2.2,
 		'Text::CSV'		=> 1.21,
 		'Time::ParseDate'	=> 2011.0517,
 		'WWW::Mechanize::GZip'	=> 0.12,
