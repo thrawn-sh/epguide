@@ -75,6 +75,12 @@ sub extract_imdb_data($$) { # {{{1
 		}
 	}
 
+	$LOGGER->warn('could not determine title  for ' . $url) unless $title;
+	$LOGGER->warn('could not determine year   for ' . $url) unless $year;
+	$LOGGER->warn('could not determine genres for ' . $url) unless @genres;
+	$LOGGER->warn('could not determine rating for ' . $url) unless $rating;
+	$LOGGER->warn('could not determine raters for ' . $url) unless $raters;
+
 	$LOGGER->debug("@genres");
 	return {id => $imdb_number, title => $title, year => $year, genres => \@genres, rating => $rating, raters => $raters, url => $url};
 } # }}}1
