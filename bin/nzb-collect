@@ -15,7 +15,6 @@ use NZB::Check;
 use NZB::EpisodeGuides;
 use NZB::IMDB;
 use NZB::Message;
-use NZB::MovieWeb;
 use NZB::NFO;
 
 # Configuration log4perl
