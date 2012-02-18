@@ -10,7 +10,7 @@ WriteMakefile(
 	AUTHOR		=> 'Thrawn <thrawn@shadowhunt.de>',
 	EXE_FILES	=> [ 'bin/nzb-collect' ],
 	LICENSE		=> 'perl',
-	NAME		=> 'NZB::Collect',
+	NAME		=> 'NZB::Util',
 	PREREQ_PM	=> {
 		'Crypt::SSLeay'		=> 0.57,
 		'Date::Calc'		=> 6.0,

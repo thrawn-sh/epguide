@@ -2,5 +2,5 @@
 set -e
 
 if [ "$1" = "configure" ]; then
-	chmod 1777 /var/log/nzb-collect 
+	chmod 1777 /var/log/nzb-util
 fi

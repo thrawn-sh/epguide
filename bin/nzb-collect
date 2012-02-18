@@ -18,11 +18,11 @@ use NZB::Message;
 use NZB::NFO;
 
 # Configuration log4perl
-my $user_logConfig = $ENV{HOME} . '/.nzb-collect.log4perl';
+my $user_logConfig = $ENV{HOME} . '/.nzb-util/log4perl.conf';
 if (-f $user_logConfig) {
 	Log::Log4perl::init($user_logConfig);
 } else {
-	Log::Log4perl::init('/etc/nzb-collect/log4perl.conf');
+	Log::Log4perl::init('/etc/nzb-util/log4perl.conf');
 }
 
 my $LOGGER = Log::Log4perl->get_logger();
@@ -213,7 +213,7 @@ sub isExpectedMovie($$) { #{{{1
 	return ($title eq $expected);
 } #}}}1
 sub parseCMDL { # {{{1
-	my $config = $ENV{HOME} . '/.nzb-collect';
+	my $config = $ENV{HOME} . '/.nzb-util/nzb-collect';
 	my $help=0;
 
 	my $nzbage;

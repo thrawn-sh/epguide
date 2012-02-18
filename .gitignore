@@ -3,7 +3,7 @@
 /Makefile.old
 /blib
 /debian/files
-/debian/nzb-collect.debhelper.log
-/debian/nzb-collect.substvars
-/debian/nzb-collect/
+/debian/nzb-util.debhelper.log
+/debian/nzb-util.substvars
+/debian/nzb-util/
 /pm_to_blib

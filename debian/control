@@ -1,4 +1,4 @@
-Source: nzb-collect
+Source: nzb-util
 Section: perl
 Priority: optional
 Maintainer: Shadowhunt Package <package@shadowhunt.de>
@@ -14,7 +14,7 @@ Build-Depends-Indep: perl,
  libxml-dom-perl
 Standards-Version: 3.9.2
 
-Package: nzb-collect
+Package: nzb-util
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  libcrypt-ssleay-perl,
@@ -27,6 +27,6 @@ Depends: ${perl:Depends}, ${misc:Depends},
  libxml-dom-perl
 Recommends: nzbget
 Description: lightweight news tracker
- nzb-collect is a lightweight binary news tracker, that uses various free
+ nzb-util is a lightweight binary news tracker, that uses various free
  online platforms to keep you informed about binary news.
  .

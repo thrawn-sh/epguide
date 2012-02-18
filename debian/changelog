@@ -1,4 +1,4 @@
-nzb-collect (2012.0215) oneiric; urgency=low
+nzb-util (2012.0215) oneiric; urgency=low
 
   * Added debugging to the IMDB module
   * Bugfix IMDB generes are now retrieved again
@@ -6,7 +6,7 @@ nzb-collect (2012.0215) oneiric; urgency=low
 
  -- Shadowhunt Package <package@shadowhunt.de>  Wed, 15 Feb 2012 14:42:25 +0100
 
-nzb-collect (2012.0203) oneiric; urgency=low
+nzb-util (2012.0203) oneiric; urgency=low
 
   * Added global default log4perl file and system logging folder
   * Added nzbget wrapper
@@ -14,7 +14,7 @@ nzb-collect (2012.0203) oneiric; urgency=low
 
  -- Shadowhunt Package <package@shadowhunt.de>  Fri, 03 Feb 2012 16:50:35 +0100
 
-nzb-collect (2011.0202) unstable; urgency=low
+nzb-util (2011.0202) unstable; urgency=low
 
   * Initial Release.
 
