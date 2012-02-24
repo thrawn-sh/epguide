@@ -6,6 +6,7 @@ use strict;
 use warnings FATAL => 'all';
 
 use Date::Calc qw( Add_Delta_Days Date_to_Time Today );
+use File::Path;
 use File::stat;
 use Getopt::Long;
 use Log::Log4perl;
@@ -38,13 +39,16 @@ sub crawl_movies($) { #{{{1
 	my $imdb      = NZB::IMDB->new(dir => $CFG->{'nzbdir'});
 	my $nfo       = NZB::NFO->new();
 
-	my %blacklist      = map { $_ => 1 } @{$CFG->{'blacklist'}};
+	my $folder         = $CFG->{'nzbdir'} . '/movie';
 	my $genre_ratings  = $CFG->{'movies_genre_ratings'};
 	my $group          = $CFG->{'movies_group'};
 	my $max_size       = $CFG->{'movies_max_size'};
 	my $min_size       = $CFG->{'movies_min_size'};
 	my $minimum_rating = $CFG->{'movies_rating'};
 	my $nzbage         = $CFG->{'nzbage'};
+	my %blacklist      = map { $_ => 1 } @{$CFG->{'blacklist'}};
+
+	File::Path::make_path($folder);
 
 	my $nzbs = $binsearch->searchNZBQuery($query, $group, $min_size, $max_size, $nzbage);
 	for my $nzb (@$nzbs) {
@@ -59,8 +63,8 @@ sub crawl_movies($) { #{{{1
 		$file_name =~ s/\s+/_/g;
 		$file_name =~ s/\W//g;
 
-		my $file   = $CFG->{'nzbdir'} . '/movie-' . $file_name . '.nzb';
-		my $noFile = $CFG->{'nzbdir'} . '/.movie-' . $file_name . '.NO'; # created if rating is to bad => no more queries for this movie
+		my $file   = $folder . '/' . $file_name . '.nzb';
+		my $noFile = $folder . '/' . $file_name . '.NO'; # created if rating is to bad => no more queries for this movie
 		if ((-e $file) or (-e $noFile)) {
 			$LOGGER->debug('movie already checked => skipping');
 			next;
@@ -96,9 +100,12 @@ sub crawl_series() { #{{{1
 	my $check     = NZB::Check->new(binsearch => $binsearch, speed => $CFG->{'speed'}, wrapper => $CFG->{'wrapper'}, wrapper_cfg => $CFG->{'wrapper_cfg'});
 	my $epGuides  = NZB::EpisodeGuides->new();
 
+	my $folder         = $CFG->{'nzbdir'} . '/serie';
 	my $nzbage         = $CFG->{'nzbage'};
 	my $search_weeks   = $CFG->{'series_search_weeks'};
 	my %blacklist      = map { $_ => 1 } @{$CFG->{'blacklist'}};
+
+	File::Path::make_path($folder);
 
 	for my $serie (@{$CFG->{'series'}}) {
 		my $serieID = $serie->{'id'};
@@ -112,7 +119,7 @@ sub crawl_series() { #{{{1
 				my $episodeID = $episode . ($hd ? '-hd' : '');
 				$LOGGER->debug($name . ': ' . $episodeID);
 
-				my $file = $CFG->{'nzbdir'} . '/serie-' . $file . '_' . $episodeID . '.nzb';
+				my $file = $folder . '/' . $file . '_' . $episodeID . '.nzb';
 				if (-e $file) {
 					$LOGGER->debug('episode already checked => skipping');
 					next;
@@ -132,28 +139,20 @@ sub crawl_series() { #{{{1
 	}
 } #}}}1 
 
-sub cleanup() { #{{{1
-	my @today       = Today();
-	my $movies_keep = Date_to_Time(Add_Delta_Days(@today, ($CFG->{'movies_search_weeks'} + 4) * -7), 0, 0, 0);
-	my $series_keep = Date_to_Time(Add_Delta_Days(@today, ($CFG->{'series_search_weeks'} + 4) * -7), 0, 0, 0);
+sub cleanup($$) { #{{{1
+	my ($dir, $grace_weeks) = @_;
 
-	my $dir = ${CFG}->{'nzbdir'};
+	my @today = Today();
+	my $keep  = Date_to_Time(Add_Delta_Days(@today, $grace_weeks * -7), 0, 0, 0);
+
 	opendir(DIR, $dir) or die $!;
-	while (my $file = readdir(DIR)) {
-		if (($file =~ m/.+\.nzb$/) or ($file =~ m/.+\.NO$/)) {
-			my $sb    = stat($dir . '/' . $file);
-			my $mtime = $sb->mtime();
-
-			if ($file =~ m/^serie-/) {
-				if ($mtime < $series_keep) {
-					$LOGGER->debug('cleaning old serie: ' . $file);
-					unlink($dir . '/' . $file);
-				}
-			} else {
-				if ($mtime < $movies_keep) {
-					$LOGGER->debug('cleaning old movie: ' . $file);
-					unlink($dir . '/' . $file);
-				}
+	while (my $element = readdir(DIR)) {
+		my $file = $dir . '/' . $element;
+		if (-f $file) {
+			my $sb = stat($file);
+			if ($sb->mtime < $keep) {
+				$LOGGER->debug('cleaning old file: ' . $file);
+				unlink($file);
 			}
 		}
 	}
@@ -214,28 +213,32 @@ sub isExpectedMovie($$) { #{{{1
 } #}}}1
 sub parseCMDL { # {{{1
 	my $config = $ENV{HOME} . '/.nzb-util/nzb-collect';
-	my $help=0;
 
+	my $help=0;
+	my $nonotify=0;
 	my $nzbage;
 	my $nzbdir;
 	my $output;
 	my $speed;
 
+
 	my $result = GetOptions(
 		"config=s"  => \$config,
 		"dir=s"     => \$nzbdir,
 		"help!"     => \$help,
+		"nonotify!" => \$nonotify,
 		"output=s"  => \$output,
 		"speed=i"   => \$speed,
 	);
 
 	if ($help) {
 		print $0 . ': <OPTIONS>' . "\n";
-		print "    --config:  filename of the configuration-file to read.\n";
-		print "    --dir:     diretory to output the nzb files to.\n";
-		print "    --help:    print this help.\n";
-		print "    --output:  write progress and messages to this file (default: STDOUT).\n";
-		print "    --speed:   limit download spead to this (kb/s).\n";
+		print "    --config:   filename of the configuration-file to read.\n";
+		print "    --dir:      diretory to output the nzb files to.\n";
+		print "    --help:     print this help.\n";
+		print "    --nonotify: diable notifications.\n";
+		print "    --output:   write progress and messages to this file (default: STDOUT).\n";
+		print "    --speed:    limit download spead to this (kb/s).\n";
 		exit 0;
 	}
 
@@ -255,6 +258,8 @@ sub parseCMDL { # {{{1
 	} else {
 		$CFG{'output'} = *STDOUT;
 	}
+
+	$CFG{'notify_enabled'} = not $nonotify;
 
 	return \%CFG;
 } # }}}1
@@ -333,5 +338,9 @@ if ($CFG->{'movies_search_enabled'}) {
 	}
 }
 
-cleanup();
-processNotifications();
+cleanup(${CFG}->{'nzbdir'} . '/movie', $CFG->{'movies_search_weeks'});
+cleanup(${CFG}->{'nzbdir'} . '/serie', $CFG->{'series_search_weeks'});
+
+if ($CFG->{'notify_enabled'}) {
+	processNotifications();
+}
