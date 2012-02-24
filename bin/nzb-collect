@@ -139,28 +139,20 @@ sub crawl_series() { #{{{1
 	}
 } #}}}1 
 
-sub cleanup() { #{{{1
-	my @today       = Today();
-	my $movies_keep = Date_to_Time(Add_Delta_Days(@today, ($CFG->{'movies_search_weeks'} + 4) * -7), 0, 0, 0);
-	my $series_keep = Date_to_Time(Add_Delta_Days(@today, ($CFG->{'series_search_weeks'} + 4) * -7), 0, 0, 0);
+sub cleanup($$) { #{{{1
+	my ($dir, $grace_weeks) = @_;
 
-	my $dir = ${CFG}->{'nzbdir'};
+	my @today = Today();
+	my $keep  = Date_to_Time(Add_Delta_Days(@today, $grace_weeks * -7), 0, 0, 0);
+
 	opendir(DIR, $dir) or die $!;
-	while (my $file = readdir(DIR)) {
-		if (($file =~ m/.+\.nzb$/) or ($file =~ m/.+\.NO$/)) {
-			my $sb    = stat($dir . '/' . $file);
-			my $mtime = $sb->mtime();
-
-			if ($file =~ m/^serie-/) {
-				if ($mtime < $series_keep) {
-					$LOGGER->debug('cleaning old serie: ' . $file);
-					unlink($dir . '/' . $file);
-				}
-			} else {
-				if ($mtime < $movies_keep) {
-					$LOGGER->debug('cleaning old movie: ' . $file);
-					unlink($dir . '/' . $file);
-				}
+	while (my $element = readdir(DIR)) {
+		my $file = $dir . '/' . $element;
+		if (-f $file) {
+			my $sb = stat($file);
+			if ($sb->mtime < $keep) {
+				$LOGGER->debug('cleaning old file: ' . $file);
+				unlink($file);
 			}
 		}
 	}
@@ -346,7 +338,9 @@ if ($CFG->{'movies_search_enabled'}) {
 	}
 }
 
-cleanup();
+cleanup(${CFG}->{'nzbdir'} . '/movie', $CFG->{'movies_search_weeks'});
+cleanup(${CFG}->{'nzbdir'} . '/serie', $CFG->{'series_search_weeks'});
+
 if ($CFG->{'notify_enabled'}) {
 	processNotifications();
 }
