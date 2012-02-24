@@ -6,6 +6,7 @@ use strict;
 use warnings FATAL => 'all';
 
 use Date::Calc qw( Add_Delta_Days Date_to_Time Today );
+use File::Path;
 use File::stat;
 use Getopt::Long;
 use Log::Log4perl;
@@ -38,13 +39,16 @@ sub crawl_movies($) { #{{{1
 	my $imdb      = NZB::IMDB->new(dir => $CFG->{'nzbdir'});
 	my $nfo       = NZB::NFO->new();
 
-	my %blacklist      = map { $_ => 1 } @{$CFG->{'blacklist'}};
+	my $folder         = $CFG->{'nzbdir'} . '/movie';
 	my $genre_ratings  = $CFG->{'movies_genre_ratings'};
 	my $group          = $CFG->{'movies_group'};
 	my $max_size       = $CFG->{'movies_max_size'};
 	my $min_size       = $CFG->{'movies_min_size'};
 	my $minimum_rating = $CFG->{'movies_rating'};
 	my $nzbage         = $CFG->{'nzbage'};
+	my %blacklist      = map { $_ => 1 } @{$CFG->{'blacklist'}};
+
+	File::Path::make_path($folder);
 
 	my $nzbs = $binsearch->searchNZBQuery($query, $group, $min_size, $max_size, $nzbage);
 	for my $nzb (@$nzbs) {
@@ -59,8 +63,8 @@ sub crawl_movies($) { #{{{1
 		$file_name =~ s/\s+/_/g;
 		$file_name =~ s/\W//g;
 
-		my $file   = $CFG->{'nzbdir'} . '/movie-' . $file_name . '.nzb';
-		my $noFile = $CFG->{'nzbdir'} . '/.movie-' . $file_name . '.NO'; # created if rating is to bad => no more queries for this movie
+		my $file   = $folder . '/' . $file_name . '.nzb';
+		my $noFile = $folder . '/' . $file_name . '.NO'; # created if rating is to bad => no more queries for this movie
 		if ((-e $file) or (-e $noFile)) {
 			$LOGGER->debug('movie already checked => skipping');
 			next;
@@ -96,9 +100,12 @@ sub crawl_series() { #{{{1
 	my $check     = NZB::Check->new(binsearch => $binsearch, speed => $CFG->{'speed'}, wrapper => $CFG->{'wrapper'}, wrapper_cfg => $CFG->{'wrapper_cfg'});
 	my $epGuides  = NZB::EpisodeGuides->new();
 
+	my $folder         = $CFG->{'nzbdir'} . '/serie';
 	my $nzbage         = $CFG->{'nzbage'};
 	my $search_weeks   = $CFG->{'series_search_weeks'};
 	my %blacklist      = map { $_ => 1 } @{$CFG->{'blacklist'}};
+
+	File::Path::make_path($folder);
 
 	for my $serie (@{$CFG->{'series'}}) {
 		my $serieID = $serie->{'id'};
@@ -112,7 +119,7 @@ sub crawl_series() { #{{{1
 				my $episodeID = $episode . ($hd ? '-hd' : '');
 				$LOGGER->debug($name . ': ' . $episodeID);
 
-				my $file = $CFG->{'nzbdir'} . '/serie-' . $file . '_' . $episodeID . '.nzb';
+				my $file = $folder . '/' . $file . '_' . $episodeID . '.nzb';
 				if (-e $file) {
 					$LOGGER->debug('episode already checked => skipping');
 					next;
