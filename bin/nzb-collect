@@ -214,28 +214,32 @@ sub isExpectedMovie($$) { #{{{1
 } #}}}1
 sub parseCMDL { # {{{1
 	my $config = $ENV{HOME} . '/.nzb-util/nzb-collect';
-	my $help=0;
 
+	my $help=0;
+	my $nonotify=0;
 	my $nzbage;
 	my $nzbdir;
 	my $output;
 	my $speed;
 
+
 	my $result = GetOptions(
 		"config=s"  => \$config,
 		"dir=s"     => \$nzbdir,
 		"help!"     => \$help,
+		"nonotify!" => \$nonotify,
 		"output=s"  => \$output,
 		"speed=i"   => \$speed,
 	);
 
 	if ($help) {
 		print $0 . ': <OPTIONS>' . "\n";
-		print "    --config:  filename of the configuration-file to read.\n";
-		print "    --dir:     diretory to output the nzb files to.\n";
-		print "    --help:    print this help.\n";
-		print "    --output:  write progress and messages to this file (default: STDOUT).\n";
-		print "    --speed:   limit download spead to this (kb/s).\n";
+		print "    --config:   filename of the configuration-file to read.\n";
+		print "    --dir:      diretory to output the nzb files to.\n";
+		print "    --help:     print this help.\n";
+		print "    --nonotify: diable notifications.\n";
+		print "    --output:   write progress and messages to this file (default: STDOUT).\n";
+		print "    --speed:    limit download spead to this (kb/s).\n";
 		exit 0;
 	}
 
@@ -255,6 +259,8 @@ sub parseCMDL { # {{{1
 	} else {
 		$CFG{'output'} = *STDOUT;
 	}
+
+	$CFG{'notify_enabled'} = not $nonotify;
 
 	return \%CFG;
 } # }}}1
@@ -334,4 +340,6 @@ if ($CFG->{'movies_search_enabled'}) {
 }
 
 cleanup();
-processNotifications();
+if ($CFG->{'notify_enabled'}) {
+	processNotifications();
+}
