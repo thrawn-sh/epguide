@@ -1,3 +1,10 @@
+nzb-util (2012.0224) oneiric; urgency=low
+
+  * added --nonotify cmdl switch
+  * restucture nzbdir folder
+
+ -- Shadowhunt Package <package@shadowhunt.de>  Fri, 24 Feb 2012 10:36:03 +0100
+
 nzb-util (2012.0215) oneiric; urgency=low
 
   * Added debugging to the IMDB module
