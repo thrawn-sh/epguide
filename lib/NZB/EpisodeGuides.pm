@@ -65,6 +65,11 @@ sub getEpisodes($$$) { #{{{1
 		my $season   = $fields[1];
 		my $episode  = $fields[2];
 		my $released = $fields[4];
+
+		unless($released) {
+			$LOGGER->info('Missing release date : ' . $released . ' => skipping');
+			next;
+		}
 		$released =~ s# #/#g;
 
 		my @dateparts = split(/\//,$released);

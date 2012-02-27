@@ -1,3 +1,9 @@
+nzb-util (2012.0228) oneiric; urgency=low
+
+  * handle missing/incomplete csv data more graceful
+
+ -- Shadowhunt Package <package@shadowhunt.de>  Fri, 28 Feb 2012 00:16:17 +0100
+
 nzb-util (2012.0224) oneiric; urgency=low
 
   * added --nonotify cmdl switch
