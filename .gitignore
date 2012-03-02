@@ -2,8 +2,4 @@
 /Makefile
 /Makefile.old
 /blib
-/debian/files
-/debian/nzb-util.debhelper.log
-/debian/nzb-util.substvars
-/debian/nzb-util/
 /pm_to_blib
