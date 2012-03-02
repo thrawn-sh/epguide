@@ -102,7 +102,7 @@ sub extract_imdb_data($$) { # {{{1
 
 	$LOGGER->debug("@genres");
 	my $imdb = {id => $imdb_number, title => $title, year => $year, genres => \@genres, rating => $rating, raters => $raters, url => $url};
-	Storable::store($imdb, $cache);
+	Storable::lock_store($imdb, $cache);
 	return $imdb;
 } # }}}1
 
