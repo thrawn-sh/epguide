@@ -37,6 +37,31 @@ sub new {
 	return $self;
 }
 
+sub extract_first_release_date($$) { # {{{1
+	my ($self, $imdb_number) = @_;
+
+	my $url = 'http://www.imdb.com/title/tt' . $imdb_number . '/releaseinfo';
+	$LOGGER->debug('url: ' . $url);
+
+	my $www = $self->{'www'};
+	$www->get($url);
+	unless ($www->success) {
+		$LOGGER->error('Can\'t retrieve ' . $url . ': ' . $!);
+		return undef;
+	}
+
+	my $release = undef;
+	for (split("\n", $www->content())) {
+		# <td align="right"><a href="/date/10-29/">29 October</a> <a href="/year/2003/">2003</a></td>
+		if (/.*<a href="\/date\/(\d{2})-(\d{2})\/">.*<a href="\/year\/(\d{4})\/">.*/) {
+			$release = $3 . '-' . $1 . '-' . $2;
+			last;
+		}
+	}
+
+	$LOGGER->warn('could not determine release for ' . $url) unless $release;
+	return $release;
+}  # }}}1
 sub extract_imdb_data($$) { # {{{1
 	my ($self, $imdb_number) = @_;
 
@@ -62,9 +87,9 @@ sub extract_imdb_data($$) { # {{{1
 		return undef;
 	}
 
-	my $title = undef;
-	my $year = undef;
-	my @genres;
+	my $title  = undef;
+	my $year   = undef;
+	my @genres = ();
 	my $rating = undef;
 	my $raters = undef;
 
@@ -97,11 +122,13 @@ sub extract_imdb_data($$) { # {{{1
 	$LOGGER->warn('could not determine title  for ' . $url) unless $title;
 	$LOGGER->warn('could not determine year   for ' . $url) unless $year;
 	$LOGGER->warn('could not determine genres for ' . $url) unless @genres;
+	$LOGGER->debug("@genres");
 	$LOGGER->warn('could not determine rating for ' . $url) unless $rating;
 	$LOGGER->warn('could not determine raters for ' . $url) unless $raters;
 
-	$LOGGER->debug("@genres");
-	my $imdb = {id => $imdb_number, title => $title, year => $year, genres => \@genres, rating => $rating, raters => $raters, url => $url};
+	my $release = extract_first_release_date($self, $imdb_number);
+
+	my $imdb = {id => $imdb_number, title => $title, year => $year, genres => \@genres, rating => $rating, raters => $raters, release => $release, url => $url};
 	Storable::lock_store($imdb, $cache);
 	return $imdb;
 } # }}}1
