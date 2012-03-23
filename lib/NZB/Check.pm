@@ -126,10 +126,13 @@ sub determineFirstRAR($$) { #{{{1
 			my $part_a = "";
 			$a->{'subject'} =~ m/(\d+)\.rar"/;
 			$part_a = $1;
+			$LOGGER->warn($a->{'subject'} . ' did not match') unless $part_a;
+
 
 			my $part_b = "";
 			$b->{'subject'} =~ m/(\d+)\.rar"/;
 			$part_b = $1;
+			$LOGGER->warn($b->{'subject'} . ' did not match') unless $part_b;
 
 			return $part_a cmp $part_b;
 		} #}}}2
