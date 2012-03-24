@@ -1,3 +1,10 @@
+nzb-util (2012.0324) oneiric; urgency=low
+
+  * always use locking operations when accessing caches
+  * added more debug statements
+
+ -- Shadowhunt Package <package@shadowhunt.de>  Sat, 24 Mar 2012 11:04:39 +0100
+
 nzb-util (2012.0228) oneiric; urgency=low
 
   * handle missing/incomplete csv data more graceful
@@ -7,14 +14,14 @@ nzb-util (2012.0228) oneiric; urgency=low
 nzb-util (2012.0224) oneiric; urgency=low
 
   * added --nonotify cmdl switch
-  * restucture nzbdir folder
+  * restructure nzbdir folder
 
  -- Shadowhunt Package <package@shadowhunt.de>  Fri, 24 Feb 2012 10:36:03 +0100
 
 nzb-util (2012.0215) oneiric; urgency=low
 
   * Added debugging to the IMDB module
-  * Bugfix IMDB generes are now retrieved again
+  * Bugfix IMDB genres are now retrieved again
   * Added IMDB cache
 
  -- Shadowhunt Package <package@shadowhunt.de>  Wed, 15 Feb 2012 14:42:25 +0100
