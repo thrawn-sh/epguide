@@ -67,7 +67,7 @@ sub getEpisodes($$$) { #{{{1
 		my $released = $fields[4];
 
 		unless($released) {
-			$LOGGER->info('Missing release date : ' . $released . ' => skipping');
+			$LOGGER->info('Missing release date : => skipping');
 			next;
 		}
 		$released =~ s# #/#g;
