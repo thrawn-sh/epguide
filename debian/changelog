@@ -1,3 +1,9 @@
+nzb-util (2012.0904) precise; urgency=low
+
+  * only store complete records to imdb db
+
+ -- Shadowhunt Package <package@shadowhunt.de>  Tue, 04 Sep 2012 22:14:12 +0200
+
 nzb-util (2012.0831) precise; urgency=low
 
   * number of raters can be undefined, handle gracefully

@@ -119,18 +119,45 @@ sub extract_imdb_data($$) { # {{{1
 		}
 	}
 
-	$LOGGER->warn('could not determine title  for ' . $url) unless $title;
-	$LOGGER->warn('could not determine year   for ' . $url) unless $year;
-	$LOGGER->warn('could not determine genres for ' . $url) unless @genres;
-	$LOGGER->debug("@genres");
-	$LOGGER->warn('could not determine rating for ' . $url) unless $rating;
-	$LOGGER->warn('could not determine raters for ' . $url) unless $raters;
-
 	my $release = extract_first_release_date($self, $imdb_number);
 
 	my $imdb = {id => $imdb_number, title => $title, year => $year, genres => \@genres, rating => $rating, raters => $raters, release => $release, url => $url};
-	Storable::lock_store($imdb, $cache);
+	if (check_imdb($imdb, $url)) {
+		Storable::lock_store($imdb, $cache);
+	}
 	return $imdb;
+} # }}}1
+
+sub check_imdb($$) { # {{{1
+	my ($imdb, $url) = @_;
+
+	unless ($imdb->{'title'}) {
+		$LOGGER->warn('could not determine title  for ' . $url);
+		return 0;
+	}
+
+	unless ($imdb->{'year'}) {
+		$LOGGER->warn('could not determine year   for ' . $url);
+		return 0;
+	}
+
+	unless ($imdb->{'genres'}) {
+		$LOGGER->warn('could not determine genres for ' . $url);
+		$LOGGER->debug("$imdb->{'genres'}");
+		return 0;
+	}
+
+	unless ($imdb->{'rating'}) {
+		$LOGGER->warn('could not determine rating for ' . $url);
+		return 0;
+	}
+
+	unless ($imdb->{'raters'}) {
+		$LOGGER->warn('could not determine raters for ' . $url);
+		return 0;
+	}
+
+	return 1;
 } # }}}1
 
 1;

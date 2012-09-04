@@ -186,17 +186,13 @@ sub isMovieAcceptable($$$) { #{{{1
 
 	# there must be at least 500 voters before we consider the rating at all
 	my $raters = $movie->{'raters'};
-	if ((undef $raters) or ($raters < 500)) {
-		return 0;
-	}
+	return 0 if ((!defined $raters) or ($raters < 500));
 
 	my $rating = $movie->{'rating'};
 	for my $genre (@{$movie->{'genres'}}) {
 		my $genre_rating = $genre_ratings->{lc($genre)};
 		if (defined $genre_rating) {
-			if ($rating >= $genre_rating) {
-				return 1;
-			}
+			return 1 if ($rating >= $genre_rating);
 		}
 	}
 	return ($rating >= $minimum_rating);
