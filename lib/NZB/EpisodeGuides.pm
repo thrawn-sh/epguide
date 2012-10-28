@@ -51,15 +51,11 @@ sub getEpisodes($$$) { #{{{1
 
 	my $csv = Text::CSV->new({ binary => 1 });
 
-	my $header = 0;
+	my $line_counter = 0;
 	for my $line (split("\n", $www->text())) {
-		unless ($csv->parse($line)) {
-			next;
-		}
-		unless ($header) {
-			$header = 1;
-			next;
-		}
+		$line_counter++;
+		next if ($line_counter <= 1);     # skip cvs header
+		next unless ($csv->parse($line)); # could not parse line
 
 		my @fields = $csv->fields();
 		my $season   = $fields[1];
