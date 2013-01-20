@@ -96,7 +96,7 @@ sub searchNZBSerie($$$$$) { #{{{1
 	if ($hd) {
 		$url .= '&cat=5040';
 	} else {
-		$url .= '&cat=5040'; # FIXME 5030
+		$url .= '&cat=5030';
 	}
 
 	return $self->searchNZB($url);
