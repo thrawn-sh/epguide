@@ -5,7 +5,10 @@ package NZB::NZB;
 use strict;
 use warnings FATAL => 'all';
 
+use Log::Log4perl;
 use XML::DOM;
+
+my $LOGGER = Log::Log4perl->get_logger();
 
 sub createNZB($$$) { #{{{1
 	my ($self, $files, $output) = @_;
@@ -50,6 +53,7 @@ sub parseNZB($$) { #{{{1
 	my $parser = XML::DOM::Parser->new();
 	my @fileset;
 
+	$LOGGER->debug('file: ' . $nzbfile);
 	my $nzbdoc = $parser->parsefile($nzbfile);
 
 	my @files;

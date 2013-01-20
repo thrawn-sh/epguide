@@ -12,7 +12,7 @@ use File::Basename;
 use File::Spec;
 use File::Temp;
 use Log::Log4perl;
-use NZB::Binsearch;
+use NZB::NNTPI;
 use NZB::NZB;
 use WWW::Mechanize::GZip;
 
@@ -30,12 +30,12 @@ sub new {
 	$www->default_header('Accept-Language' => 'en');
 
 	my $self = {
-		binsearch     => $params{'binsearch'},
-		speed         => 10 * 1000, # 10 kb/s
-		tmp_dir       => File::Temp->newdir(File::Spec->tmpdir() . '/nzb_XXXXX', UNLINK => 1),
-		unrar         => 'unrar',
-		wrapper       => dirname($0) . '/nzb_wrapper.sh',
-		wrapper_cfg   => dirname($0) . '/nzb_wrapper.cfg',
+		search      => $params{'search'},
+		speed       => 10 * 1000, # 10 kb/s
+		tmp_dir     => File::Temp->newdir(File::Spec->tmpdir() . '/nzb_XXXXX', UNLINK => 1),
+		unrar       => 'unrar',
+		wrapper     => dirname($0) . '/nzb_wrapper.sh',
+		wrapper_cfg => dirname($0) . '/nzb_wrapper.cfg',
 	};
 
 	my $speed = $params{'speed'};
@@ -60,9 +60,9 @@ sub checkNZB($$$) { #{{{1
 		return 0;
 	}
 
-	# binsearch says this is a password protected nzb 
+	# search says this is a password protected nzb 
 	if ($nzb->{'password'}) {
-		$LOGGER->debug('password (binsearch)');
+		$LOGGER->debug('password (search)');
 		return 0;
 	}
 
@@ -152,8 +152,8 @@ sub getFirstRAR($$) {#{{{1
 	my $tmp_dir = $self->{'tmp_dir'};
 	my $tmp = File::Temp->new(TEMPLATE => 'temp_XXXXX', DIR => $tmp_dir, SUFFIX => '.nzb', UNLINK => 1);
 
-	my $binsearch = $self->{'binsearch'};
-	$binsearch->downloadNZB($nzb, $tmp);
+	my $search = $self->{'search'};
+	$search->downloadNZB($nzb, $tmp);
 
 	my $files_ref = NZB::NZB->parseNZB($tmp);
 

@@ -11,12 +11,12 @@ use File::stat;
 use Getopt::Long;
 use Log::Log4perl;
 use Mail::Sendmail;
-use NZB::Binsearch;
 use NZB::Check;
 use NZB::EpisodeGuides;
 use NZB::IMDB;
 use NZB::Message;
 use NZB::NFO;
+use NZB::NNTPI;
 
 # Configuration log4perl
 my $user_logConfig = $ENV{HOME} . '/.nzb-util/log4perl.conf';
@@ -34,10 +34,10 @@ my $WRITER = NZB::Message->new(output => $CFG->{'output'});
 sub crawl_movies($) { #{{{1
 	my ($query) = @_;
 
-	my $binsearch = NZB::Binsearch->new();
-	my $check     = NZB::Check->new(binsearch => $binsearch, speed => $CFG->{'speed'}, wrapper => $CFG->{'wrapper'}, wrapper_cfg => $CFG->{'wrapper_cfg'});
-	my $imdb      = NZB::IMDB->new(dir => $CFG->{'nzbdir'});
-	my $nfo       = NZB::NFO->new();
+	my $search = NZB::NNTPI->new();
+	my $check  = NZB::Check->new(search => $search, speed => $CFG->{'speed'}, wrapper => $CFG->{'wrapper'}, wrapper_cfg => $CFG->{'wrapper_cfg'});
+	my $imdb   = NZB::IMDB->new(dir => $CFG->{'nzbdir'});
+	my $nfo    = NZB::NFO->new();
 
 	my $folder         = $CFG->{'nzbdir'} . '/movie';
 	my $genre_ratings  = $CFG->{'movies_genre_ratings'};
@@ -50,7 +50,7 @@ sub crawl_movies($) { #{{{1
 
 	File::Path::make_path($folder);
 
-	my $nzbs = $binsearch->searchNZBQuery($query, $group, $min_size, $max_size, $nzbage);
+	my $nzbs = $search->searchNZBQuery($query, $group, $min_size, $max_size, $nzbage);
 	for my $nzb (@$nzbs) {
 		my $movie = getMovieInfoForNZB($nzb, $nfo, $imdb);
 		unless (defined $movie) {
@@ -80,7 +80,7 @@ sub crawl_movies($) { #{{{1
 		next unless $check->checkNZB($nzb, \%blacklist);
 
 		$LOGGER->debug('"' . $title . '" is ok');
-		$binsearch->downloadNZB($nzb, $file);
+		$search->downloadNZB($nzb, $file);
 
 		$WRITER->write(' - ' . ' Movie: "' . $title . '"' . "\n", 'movies');
 		$WRITER->write('   ' . '   NZB: ' . $file . "\n", undef);
@@ -96,8 +96,8 @@ sub crawl_movies($) { #{{{1
 	}
 } #}}}1
 sub crawl_series() { #{{{1
-	my $binsearch = NZB::Binsearch->new();
-	my $check     = NZB::Check->new(binsearch => $binsearch, speed => $CFG->{'speed'}, wrapper => $CFG->{'wrapper'}, wrapper_cfg => $CFG->{'wrapper_cfg'});
+	my $search    = NZB::NNTPI->new();
+	my $check     = NZB::Check->new(search => $search, speed => $CFG->{'speed'}, wrapper => $CFG->{'wrapper'}, wrapper_cfg => $CFG->{'wrapper_cfg'});
 	my $epGuides  = NZB::EpisodeGuides->new();
 
 	my $folder         = $CFG->{'nzbdir'} . '/serie';
@@ -125,10 +125,12 @@ sub crawl_series() { #{{{1
 					next;
 				}
 
-				my $nzbs = $binsearch->searchNZBSerie($serie, $episode, $hd, $nzbage);
+				my $s = substr($episode, 1, 2);
+				my $e = substr($episode, 4, 2);
+				my $nzbs = $search->searchNZBSerie($serie, $s, $e, $hd, $nzbage);
 				$LOGGER->debug('found potential ' . scalar(@$nzbs) . ' nzbs');
 
-				if (download($binsearch, $check, $nzbs, $file, \%blacklist)) {
+				if (download($search, $check, $nzbs, $file, \%blacklist)) {
 					$WRITER->write(' - ' . ' Episode: ' . $name . ' ' . $episodeID . "\n", $serieID);
 					$WRITER->write('   ' . '     NZB: ' . $file . "\n", undef);
 				} else {
@@ -159,11 +161,11 @@ sub cleanup($$) { #{{{1
 	closedir(DIR);
 } #}}}1
 sub download($$$$) { #{{{1
-	my ($binsearch, $check, $nzbs, $file, $blacklist) = @_;
+	my ($search, $check, $nzbs, $file, $blacklist) = @_;
 	
 	for my $nzb (@$nzbs) {
 		if ($check->checkNZB($nzb, %$blacklist)) {
-			$binsearch->downloadNZB($nzb, $file);
+			$search->downloadNZB($nzb, $file);
 			return 1;
 		}
 	}
