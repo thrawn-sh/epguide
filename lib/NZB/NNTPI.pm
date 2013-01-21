@@ -69,6 +69,8 @@ sub searchNZB($$) { #{{{1
 	foreach my $j ( @$decoded_json ) {
 		my $nfo = 0;
 		$nfo = 1 if (defined $j->{'nfoID'});
+
+		next if ($j->{'completion'} < 100);
 		my $nzb = { id => $j->{'guid'}, subject => $j->{'name'}, size => $j->{'size'}, password => 0, nfo => $nfo, poster => $j->{'fromname'} };
 		push (@nzbs, $nzb);
 	}
@@ -89,7 +91,10 @@ sub searchNZBQuery($$$$$$) { #{{{1
 sub searchNZBSerie($$$$$) { #{{{1
 	my ($self, $serie, $season, $episode, $hd, $age) = @_;
 
-	my $url = $self->{'base'} . '&o=json&t=tvsearch&q=' . $serie->{'name'} .
+	my $name = $serie->{'name'};
+	$name =~ s/\W+/%20/g;
+
+	my $url = $self->{'base'} . '&o=json&t=tvsearch&q=' . $name .
 	          '&season=' . $season .
 	          '&ep=' . $episode .
 		  '&maxage=' . $age;
