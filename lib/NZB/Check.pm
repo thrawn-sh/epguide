@@ -134,7 +134,7 @@ sub determineFirstRAR($$) { #{{{1
 			$part_b = $1;
 			$LOGGER->warn($b->{'subject'} . ' did not match') unless $part_b;
 
-			return $part_a cmp $part_b;
+			return $part_a cmp $part_b if (defined $part_a && defined $part_b);
 		} #}}}2
 
 		@rars = sort rar_sort @rars;
