@@ -115,7 +115,7 @@ sub crawl_series() { #{{{1
 
 		my $episodes = $epGuides->getEpisodes($serieID, $search_weeks);
 		for my $episode (@$episodes) {
-			foreach my $hd (0, 1) {
+			foreach my $hd (1, 0) {
 				my $episodeID = $episode . ($hd ? '-hd' : '');
 				$LOGGER->debug($name . ': ' . $episodeID);
 
