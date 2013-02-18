@@ -118,6 +118,14 @@ sub crawl_series() { #{{{1
 				my $episodeID = $episode . ($hd ? '-hd' : '');
 				$LOGGER->debug($name . ': ' . $episodeID);
 
+				if (!$hd) {
+					my $hdfile = $folder . '/' . $file . '_' . $episodeID . '-hd.nzb';
+					if (-e $hdfile) {
+						$LOGGER->debug('episode (HD) already checked => skipping');
+						next;
+					}
+				}
+
 				my $file = $folder . '/' . $file . '_' . $episodeID . '.nzb';
 				if (-e $file) {
 					$LOGGER->debug('episode already checked => skipping');
