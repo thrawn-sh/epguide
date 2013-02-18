@@ -38,6 +38,7 @@ sub downloadNZB($$$) { #{{{1
 	my ($self, $nzb, $file) = @_;
 
 	my $url = $self->{'base'} . '&t=get&id=' . $nzb->{'id'};
+	$LOGGER->debug('url: ' . $url);
 
 	my $www = $self->{'www'};
 	mkpath(dirname($file));
@@ -78,15 +79,23 @@ sub searchNZB($$) { #{{{1
 	@nzbs= sort { $a->{'id'} cmp $b->{'id'}; } @nzbs;
 	return \@nzbs;
 } #}}}1
-sub searchNZBQuery($$$$$$) { #{{{1
-	my ($self, $query, $age) = @_;
-	$query =~ s/\W+/+/g;
+sub searchNZBQuery($$$$$) { #{{{1
+	my ($self, $query, $min_size, $max_size, $age) = @_;
+	$query =~ s/\W+/%20/g;
 
 	my $url = $self->{'base'} . '&o=json&t=search' .
 	          '&q=' . $query .
 		  '&maxage=' . $age;
 
-	return $self->searchNZB($url);
+	my @filtered;
+	my $nzbs = $self->searchNZB($url);
+	for my $nzb ( @$nzbs ) {
+		my $size = $nzb->{'size'};
+		if ($size >= $min_size and $size <= $max_size) {
+			push(@filtered, $nzb);
+		}
+	}
+	return \@filtered;
 } #}}}1 
 sub searchNZBSerie($$$$$) { #{{{1
 	my ($self, $serie, $season, $episode, $hd, $age) = @_;
