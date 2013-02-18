@@ -41,7 +41,6 @@ sub crawl_movies($) { #{{{1
 
 	my $folder         = $CFG->{'nzbdir'} . '/movie';
 	my $genre_ratings  = $CFG->{'movies_genre_ratings'};
-	my $group          = $CFG->{'movies_group'};
 	my $max_size       = $CFG->{'movies_max_size'};
 	my $min_size       = $CFG->{'movies_min_size'};
 	my $minimum_rating = $CFG->{'movies_rating'};
@@ -50,7 +49,7 @@ sub crawl_movies($) { #{{{1
 
 	File::Path::make_path($folder);
 
-	my $nzbs = $search->searchNZBQuery($query, $group, $min_size, $max_size, $nzbage);
+	my $nzbs = $search->searchNZBQuery($query, $min_size, $max_size, $nzbage);
 	for my $nzb (@$nzbs) {
 		my $movie = getMovieInfoForNZB($nzb, $nfo, $imdb);
 		unless (defined $movie) {
