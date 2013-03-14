@@ -1,3 +1,9 @@
+nzb-util (2013.0314) precise; urgency=low
+
+  * switch to new index server
+
+ -- Shadowhunt Package <package@shadowhunt.de>  Thu, 14 Mar 2013 15:00:38 +0100
+
 nzb-util (2012.0904) precise; urgency=low
 
   * only store complete records to imdb db
