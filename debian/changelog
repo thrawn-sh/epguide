@@ -1,3 +1,9 @@
+nzb-util (2013.0512) precise; urgency=low
+
+  * added nzb-notify
+
+ -- Shadowhunt Package <package@shadowhunt.de>  Sun, 12 May 2013 18:58:43 +0200
+
 nzb-util (2013.0314) precise; urgency=low
 
   * switch to new index server
