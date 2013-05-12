@@ -8,7 +8,7 @@ eval 'use ExtUtils::MakeMaker::Coverage';
 
 WriteMakefile(
 	AUTHOR		=> 'Thrawn <thrawn@shadowhunt.de>',
-	EXE_FILES	=> [ 'bin/nzb-collect' ],
+	EXE_FILES	=> [ 'bin/nzb-collect', 'bin/nzb-notify' ],
 	LICENSE		=> 'perl',
 	NAME		=> 'NZB::Util',
 	PREREQ_PM	=> {
