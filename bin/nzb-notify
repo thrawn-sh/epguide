@@ -1,0 +1,75 @@
+#!/usr/bin/perl -w
+
+package NZB;
+
+use strict;
+use warnings FATAL => 'all';
+
+use Getopt::Long;
+use Log::Log4perl;
+use NZB::EpisodeGuides;
+use NZB::Message;
+
+# Configuration log4perl
+my $user_logConfig = $ENV{HOME} . '/.nzb-util/log4perl.conf';
+if (-f $user_logConfig) {
+	Log::Log4perl::init($user_logConfig);
+} else {
+	Log::Log4perl::init('/etc/nzb-util/log4perl.conf');
+}
+
+my $CFG    = parseCMDL();
+my $WRITER = NZB::Message->new(output => $CFG->{'output'});
+
+sub parseCMDL { # {{{1
+	my $config = $ENV{HOME} . '/.nzb-util/nzb-collect';
+
+	my $help=0;
+	my $output;
+
+
+	my $result = GetOptions(
+		"config=s"  => \$config,
+		"help!"     => \$help,
+		"output=s"  => \$output,
+	);
+
+	if ($help) {
+		print $0 . ': <OPTIONS>' . "\n";
+		print "    --config:   filename of the configuration-file to read.\n";
+		print "    --help:     print this help.\n";
+		print "    --output:   write progress and messages to this file (default: STDOUT).\n";
+		exit 0;
+	}
+
+	my %CFG;
+	# read in $config file
+	open(FILE, $config) or die "could not open $config: $!";
+	my $content; { local $/ = undef; $content = <FILE> }
+	close(FILE);
+	eval $content or die "could not slurp in $config: $!";
+
+	# overriding config values by commandline values (won't be saved)
+	if (defined $output)  {
+		open(OUTPUT, ">", $output) or die "could not open $output: $!";
+		$CFG{'output'} = *OUTPUT;
+	} else {
+		$CFG{'output'} = *STDOUT;
+	}
+
+	return \%CFG;
+} # }}}1
+
+if ($CFG->{'series_search_enabled'}) {
+	my $epGuides  = NZB::EpisodeGuides->new();
+
+	for my $serie (@{$CFG->{'series'}}) {
+		my $serieID = $serie->{'id'};
+		my $name = $serie->{'name'};
+
+		my $episodes = $epGuides->getEpisodes($serieID, 0);
+		for my $episode (@$episodes) {
+			$WRITER->write(' - ' . ' Episode: ' . $name . ' ' . $episode . "\n", $serieID);
+		}
+	}
+}
