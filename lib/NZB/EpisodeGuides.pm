@@ -88,7 +88,7 @@ sub getAllEpisodes($$$) { #{{{1
 		$released = join('/', @dateparts);
 		$released = str2time($released);
 
-		if (($released > $first) && ($released <= $today)) {
+		if (($released > $first) && ($released < $today)) {
 			my $episodeID = sprintf("s%02de%02d", $season, $episode);
 			push(@episodes, { id => $episodeID, date => time2str('%Y-%m-%d', $released) });
 		}
