@@ -1,3 +1,9 @@
+nzb-util (2013.1113) wheezy; urgency=low
+
+  * rebuild nzb-notify to epguide-notify
+
+ -- Shadowhunt Package <package@shadowhunt.de>  Wed, 13 Nov 2013 22:25:04 +0100
+
 nzb-util (2013.0512) precise; urgency=low
 
   * added nzb-notify
