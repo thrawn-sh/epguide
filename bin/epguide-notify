@@ -11,18 +11,22 @@ use NZB::EpisodeGuides;
 use NZB::Message;
 
 # Configuration log4perl
-my $user_logConfig = $ENV{HOME} . '/.nzb-util/log4perl.conf';
+my $system_logConfig = '/etc/nzb-util/log4perl.conf';
+my $user_logConfig   = $ENV{HOME} . '/.nzb-util/log4perl.conf';
 if (-f $user_logConfig) {
 	Log::Log4perl::init($user_logConfig);
+} elsif (-f $system_logConfig) {
+	Log::Log4perl::init($system_logConfig);
 } else {
-	Log::Log4perl::init('/etc/nzb-util/log4perl.conf');
+	Log::Log4perl::init();
 }
+
 
 my $CFG    = parseCMDL();
 my $WRITER = NZB::Message->new(output => $CFG->{'output'});
 
 sub parseCMDL { # {{{1
-	my $config = $ENV{HOME} . '/.nzb-util/nzb-collect';
+	my $config = $ENV{HOME} . '/.nzb-util/epguide.conf';
 
 	my $help=0;
 	my $output;
@@ -60,16 +64,17 @@ sub parseCMDL { # {{{1
 	return \%CFG;
 } # }}}1
 
-if ($CFG->{'series_search_enabled'}) {
-	my $epGuides  = NZB::EpisodeGuides->new();
+my $epGuides  = NZB::EpisodeGuides->new();
 
-	for my $serie (@{$CFG->{'series'}}) {
-		my $serieID = $serie->{'id'};
-		my $name = $serie->{'name'};
+for my $serie (@{$CFG->{'series'}}) {
+	my $serieID = $serie->{'id'};
+	my $name = $serie->{'name'};
+	my $searchName = $name;
+	$searchName =~ s/\W+/./g;
 
-		my $episodes = $epGuides->getEpisodes($serieID, 0);
-		for my $episode (@$episodes) {
-			$WRITER->write(' - ' . ' Episode: ' . $name . ' ' . $episode . "\n", $serieID);
-		}
+	my $episodes = $epGuides->getAllEpisodes($serieID);
+	for my $episode (@$episodes) {
+		my $eid = $episode->{'id'};
+		$WRITER->write($episode->{'date'} . ': ' . $name . ' [' . $eid . '] https://thepiratebay.sx/search/?q=' . $searchName . '+' . $eid . "\n", $serieID);
 	}
 }
