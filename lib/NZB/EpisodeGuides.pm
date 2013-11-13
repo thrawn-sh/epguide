@@ -37,6 +37,7 @@ sub getAllEpisodes($$$) { #{{{1
 
 	my @episodes;
 	my $today = Date_to_Time(Today(), 0, 0, 0);
+	my $first = Date_to_Time(Add_Delta_Days(Today(), -90), 0, 0, 0);
 
 	my $url = 'http://epguides.com/common/exportToCSV.asp?rage=' . $serieID;
 	$LOGGER->debug('url: ' . $url);
@@ -87,7 +88,7 @@ sub getAllEpisodes($$$) { #{{{1
 		$released = join('/', @dateparts);
 		$released = str2time($released);
 
-		if ($released <= $today) {
+		if (($released > $first) && ($released <= $today)) {
 			my $episodeID = sprintf("s%02de%02d", $season, $episode);
 			push(@episodes, { id => $episodeID, date => time2str('%Y-%m-%d', $released) });
 		}
