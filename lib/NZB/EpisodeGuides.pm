@@ -86,7 +86,7 @@ sub getAllEpisodes($$$) { #{{{1
 			$dateparts[2] += 2000;
 		}
 		$released = join('/', @dateparts);
-		$released = str2time($released);
+		$released = str2time($released) + (24 * 60 * 60); # give the release one day time to propagate
 
 		if (($released > $first) && ($released < $today)) {
 			my $episodeID = sprintf("s%02de%02d", $season, $episode);
