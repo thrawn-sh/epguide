@@ -75,6 +75,6 @@ for my $serie (@{$CFG->{'series'}}) {
 	my $episodes = $epGuides->getAllEpisodes($serieID);
 	for my $episode (@$episodes) {
 		my $eid = $episode->{'id'};
-		$WRITER->write($episode->{'date'} . ': ' . $name . ' [' . $eid . '] "https://thepiratebay.sx/search/' . $searchName . '+' . uc($eid) . "/0/7/208\"\n", $serieID);
+		$WRITER->write($episode->{'date'} . ': ' . $name . ' [' . $eid . '] "https://thepiratebay.ac/search/' . $searchName . '+' . uc($eid) . "/0/7/208\"\n", $serieID);
 	}
 }
