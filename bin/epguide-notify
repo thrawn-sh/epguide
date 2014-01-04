@@ -66,6 +66,9 @@ sub parseCMDL { # {{{1
 
 my $epGuides  = NZB::EpisodeGuides->new();
 
+my $prefix = $CFG->{'prefix'};
+my $suffix = $CFG->{'suffix'};
+
 for my $serie (@{$CFG->{'series'}}) {
 	my $serieID = $serie->{'id'};
 	my $name = $serie->{'name'};
@@ -75,6 +78,6 @@ for my $serie (@{$CFG->{'series'}}) {
 	my $episodes = $epGuides->getAllEpisodes($serieID);
 	for my $episode (@$episodes) {
 		my $eid = $episode->{'id'};
-		$WRITER->write($episode->{'date'} . ': ' . $name . ' [' . $eid . '] "https://thepiratebay.ac/search/' . $searchName . '+' . uc($eid) . "/0/7/208\"\n", $serieID);
+		$WRITER->write($episode->{'date'} . ': ' . $name . ' [' . $eid . '] "' . $prefix . $searchName . '+' . uc($eid) . $suffix . "\"\n", $serieID);
 	}
 }
