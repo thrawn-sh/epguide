@@ -21,9 +21,9 @@ use NZB::NNTPI;
 # Configuration log4perl
 my $user_logConfig = $ENV{HOME} . '/.nzb-util/log4perl.conf';
 if (-f $user_logConfig) {
-	Log::Log4perl::init($user_logConfig);
+    Log::Log4perl::init($user_logConfig);
 } else {
-	Log::Log4perl::init('/etc/nzb-util/log4perl.conf');
+    Log::Log4perl::init('/etc/nzb-util/log4perl.conf');
 }
 
 my $LOGGER = Log::Log4perl->get_logger();
@@ -32,321 +32,321 @@ my $CFG    = parseCMDL();
 my $WRITER = NZB::Message->new(output => $CFG->{'output'});
 
 sub crawl_movies($) { #{{{1
-	my ($query) = @_;
+    my ($query) = @_;
 
-	my $search = NZB::NNTPI->new();
-	my $check  = NZB::Check->new(search => $search, speed => $CFG->{'speed'}, wrapper => $CFG->{'wrapper'}, wrapper_cfg => $CFG->{'wrapper_cfg'});
-	my $imdb   = NZB::IMDB->new(dir => $CFG->{'nzbdir'});
-	my $nfo    = NZB::NFO->new();
+    my $search = NZB::NNTPI->new();
+    my $check  = NZB::Check->new(search => $search, speed => $CFG->{'speed'}, wrapper => $CFG->{'wrapper'}, wrapper_cfg => $CFG->{'wrapper_cfg'});
+    my $imdb   = NZB::IMDB->new(dir => $CFG->{'nzbdir'});
+    my $nfo    = NZB::NFO->new();
 
-	my $folder         = $CFG->{'nzbdir'} . '/movie';
-	my $genre_ratings  = $CFG->{'movies_genre_ratings'};
-	my $max_size       = $CFG->{'movies_max_size'};
-	my $min_size       = $CFG->{'movies_min_size'};
-	my $minimum_rating = $CFG->{'movies_rating'};
-	my $nzbage         = $CFG->{'nzbage'};
-	my %blacklist      = map { $_ => 1 } @{$CFG->{'blacklist'}};
+    my $folder         = $CFG->{'nzbdir'} . '/movie';
+    my $genre_ratings  = $CFG->{'movies_genre_ratings'};
+    my $max_size       = $CFG->{'movies_max_size'};
+    my $min_size       = $CFG->{'movies_min_size'};
+    my $minimum_rating = $CFG->{'movies_rating'};
+    my $nzbage         = $CFG->{'nzbage'};
+    my %blacklist      = map { $_ => 1 } @{$CFG->{'blacklist'}};
 
-	File::Path::make_path($folder);
+    File::Path::make_path($folder);
 
-	my $nzbs = $search->searchNZBQuery($query, $min_size, $max_size, $nzbage);
-	for my $nzb (@$nzbs) {
-		my $movie = getMovieInfoForNZB($nzb, $nfo, $imdb);
-		unless (defined $movie) {
-			$LOGGER->debug('no imdb info available => skipping');
-			next;
-		}
+    my $nzbs = $search->searchNZBQuery($query, $min_size, $max_size, $nzbage);
+    for my $nzb (@$nzbs) {
+        my $movie = getMovieInfoForNZB($nzb, $nfo, $imdb);
+        unless (defined $movie) {
+            $LOGGER->debug('no imdb info available => skipping');
+            next;
+        }
 
-		my $title = $movie->{'title'};
-		my $file_name = lc($title);
-		$file_name =~ s/\s+/_/g;
-		$file_name =~ s/\W//g;
+        my $title = $movie->{'title'};
+        my $file_name = lc($title);
+        $file_name =~ s/\s+/_/g;
+        $file_name =~ s/\W//g;
 
-		my $file   = $folder . '/' . $file_name . '.nzb';
-		my $noFile = $folder . '/' . $file_name . '.NO'; # created if rating is to bad => no more queries for this movie
-		if ((-e $file) or (-e $noFile)) {
-			$LOGGER->debug('movie already checked => skipping');
-			next;
-		}
+        my $file   = $folder . '/' . $file_name . '.nzb';
+        my $noFile = $folder . '/' . $file_name . '.NO'; # created if rating is to bad => no more queries for this movie
+        if ((-e $file) or (-e $noFile)) {
+            $LOGGER->debug('movie already checked => skipping');
+            next;
+        }
 
-		unless (isMovieAcceptable($movie, $genre_ratings, $minimum_rating)) {
-			$LOGGER->debug('Rating (' . $movie->{'rating'} . ') of "' . $title . '" is to bad => skipping');
-			open(NO,'>' . $noFile) or $LOGGER->error('Can\'t create ' . $file . ': ' . $!);
-			close(NO);
-			next;
-		}
+        unless (isMovieAcceptable($movie, $genre_ratings, $minimum_rating)) {
+            $LOGGER->debug('Rating (' . $movie->{'rating'} . ') of "' . $title . '" is to bad => skipping');
+            open(NO,'>' . $noFile) or $LOGGER->error('Can\'t create ' . $file . ': ' . $!);
+            close(NO);
+            next;
+        }
 
-		next unless $check->checkNZB($nzb, \%blacklist);
+        next unless $check->checkNZB($nzb, \%blacklist);
 
-		$LOGGER->debug('"' . $title . '" is ok');
-		$search->downloadNZB($nzb, $file);
+        $LOGGER->debug('"' . $title . '" is ok');
+        $search->downloadNZB($nzb, $file);
 
-		$WRITER->write(' - ' . ' Movie: "' . $title . '"' . "\n", 'movies');
-		$WRITER->write('   ' . '   NZB: ' . $file . "\n", undef);
-		my $genres = $movie->{'genres'};
-		$WRITER->write('   ' . 'Genres: ' . "@$genres\n", 'movies') if defined $genres;
+        $WRITER->write(' - ' . ' Movie: "' . $title . '"' . "\n", 'movies');
+        $WRITER->write('   ' . '   NZB: ' . $file . "\n", undef);
+        my $genres = $movie->{'genres'};
+        $WRITER->write('   ' . 'Genres: ' . "@$genres\n", 'movies') if defined $genres;
 
-		my $rating = $movie->{'rating'};
-		$WRITER->write('   ' . 'Rating: ' . $rating . '/10.0' ."\n", 'movies') if defined $rating;
+        my $rating = $movie->{'rating'};
+        $WRITER->write('   ' . 'Rating: ' . $rating . '/10.0' ."\n", 'movies') if defined $rating;
 
-		my $url = $movie->{'url'};
-		$WRITER->write('   ' . '  More: ' . $url ."\n", 'movies') if defined $url;
-		$WRITER->write("\n", 'movies');
-	}
+        my $url = $movie->{'url'};
+        $WRITER->write('   ' . '  More: ' . $url ."\n", 'movies') if defined $url;
+        $WRITER->write("\n", 'movies');
+    }
 } #}}}1
 sub crawl_series() { #{{{1
-	my $search    = NZB::NNTPI->new();
-	my $check     = NZB::Check->new(search => $search, speed => $CFG->{'speed'}, wrapper => $CFG->{'wrapper'}, wrapper_cfg => $CFG->{'wrapper_cfg'});
-	my $epGuides  = NZB::EpisodeGuides->new();
+    my $search    = NZB::NNTPI->new();
+    my $check     = NZB::Check->new(search => $search, speed => $CFG->{'speed'}, wrapper => $CFG->{'wrapper'}, wrapper_cfg => $CFG->{'wrapper_cfg'});
+    my $epGuides  = NZB::EpisodeGuides->new();
 
-	my $folder         = $CFG->{'nzbdir'} . '/serie';
-	my $nzbage         = $CFG->{'nzbage'};
-	my $search_weeks   = $CFG->{'series_search_weeks'};
-	my %blacklist      = map { $_ => 1 } @{$CFG->{'blacklist'}};
+    my $folder         = $CFG->{'nzbdir'} . '/serie';
+    my $nzbage         = $CFG->{'nzbage'};
+    my $search_weeks   = $CFG->{'series_search_weeks'};
+    my %blacklist      = map { $_ => 1 } @{$CFG->{'blacklist'}};
 
-	File::Path::make_path($folder);
+    File::Path::make_path($folder);
 
-	for my $serie (@{$CFG->{'series'}}) {
-		my $serieID = $serie->{'id'};
-		my $name = $serie->{'name'};
-		my $file = lc($name);
-		$file =~ s/\s+/_/g;
+    for my $serie (@{$CFG->{'series'}}) {
+        my $serieID = $serie->{'id'};
+        my $name = $serie->{'name'};
+        my $file = lc($name);
+        $file =~ s/\s+/_/g;
 
-		my $episodes = $epGuides->getEpisodes($serieID, $search_weeks);
-		for my $episode (@$episodes) {
-			foreach my $hd (1, 0) {
-				my $episodeID = $episode . ($hd ? '-hd' : '');
-				$LOGGER->debug($name . ': ' . $episodeID);
+        my $episodes = $epGuides->getEpisodes($serieID, $search_weeks);
+        for my $episode (@$episodes) {
+            foreach my $hd (1, 0) {
+                my $episodeID = $episode . ($hd ? '-hd' : '');
+                $LOGGER->debug($name . ': ' . $episodeID);
 
-				if (!$hd) {
-					my $hdfile = $folder . '/' . $file . '_' . $episodeID . '-hd.nzb';
-					if (-e $hdfile) {
-						$LOGGER->debug('episode (HD) already checked => skipping');
-						next;
-					}
-				}
+                if (!$hd) {
+                    my $hdfile = $folder . '/' . $file . '_' . $episodeID . '-hd.nzb';
+                    if (-e $hdfile) {
+                        $LOGGER->debug('episode (HD) already checked => skipping');
+                        next;
+                    }
+                }
 
-				my $file = $folder . '/' . $file . '_' . $episodeID . '.nzb';
-				if (-e $file) {
-					$LOGGER->debug('episode already checked => skipping');
-					next;
-				}
+                my $file = $folder . '/' . $file . '_' . $episodeID . '.nzb';
+                if (-e $file) {
+                    $LOGGER->debug('episode already checked => skipping');
+                    next;
+                }
 
-				my $s = substr($episode, 1, 2);
-				my $e = substr($episode, 4, 2);
-				my $nzbs = $search->searchNZBSerie($serie, $s, $e, $hd, $nzbage);
-				$LOGGER->debug('found potential ' . scalar(@$nzbs) . ' nzbs');
+                my $s = substr($episode, 1, 2);
+                my $e = substr($episode, 4, 2);
+                my $nzbs = $search->searchNZBSerie($serie, $s, $e, $hd, $nzbage);
+                $LOGGER->debug('found potential ' . scalar(@$nzbs) . ' nzbs');
 
-				if (download($search, $check, $nzbs, $file, \%blacklist)) {
-					$WRITER->write(' - ' . ' Episode: ' . $name . ' ' . $episodeID . "\n", $serieID);
-					$WRITER->write('   ' . '     NZB: ' . $file . "\n", undef);
-				} else {
-					$LOGGER->debug('no nzb found');
-				}
-			}
-		}
-	}
+                if (download($search, $check, $nzbs, $file, \%blacklist)) {
+                    $WRITER->write(' - ' . ' Episode: ' . $name . ' ' . $episodeID . "\n", $serieID);
+                    $WRITER->write('   ' . '     NZB: ' . $file . "\n", undef);
+                } else {
+                    $LOGGER->debug('no nzb found');
+                }
+            }
+        }
+    }
 } #}}}1 
 
 sub cleanup($$) { #{{{1
-	my ($dir, $grace_weeks) = @_;
+    my ($dir, $grace_weeks) = @_;
 
-	my @today = Today();
-	my $keep  = Date_to_Time(Add_Delta_Days(@today, $grace_weeks * -7), 0, 0, 0);
+    my @today = Today();
+    my $keep  = Date_to_Time(Add_Delta_Days(@today, $grace_weeks * -7), 0, 0, 0);
 
-	opendir(DIR, $dir) or die $!;
-	while (my $element = readdir(DIR)) {
-		my $file = $dir . '/' . $element;
-		if (-f $file) {
-			my $sb = stat($file);
-			if ($sb->mtime < $keep) {
-				$LOGGER->debug('cleaning old file: ' . $file);
-				unlink($file);
-			}
-		}
-	}
-	closedir(DIR);
+    opendir(DIR, $dir) or die $!;
+    while (my $element = readdir(DIR)) {
+        my $file = $dir . '/' . $element;
+        if (-f $file) {
+            my $sb = stat($file);
+            if ($sb->mtime < $keep) {
+                $LOGGER->debug('cleaning old file: ' . $file);
+                unlink($file);
+            }
+        }
+    }
+    closedir(DIR);
 } #}}}1
 sub download($$$$) { #{{{1
-	my ($search, $check, $nzbs, $file, $blacklist) = @_;
-	
-	for my $nzb (@$nzbs) {
-		if ($check->checkNZB($nzb, %$blacklist)) {
-			$search->downloadNZB($nzb, $file);
-			return 1;
-		}
-	}
+    my ($search, $check, $nzbs, $file, $blacklist) = @_;
+    
+    for my $nzb (@$nzbs) {
+        if ($check->checkNZB($nzb, %$blacklist)) {
+            $search->downloadNZB($nzb, $file);
+            return 1;
+        }
+    }
 
-	return 0;
+    return 0;
 } #}}}1
 sub getMovieInfoForNZB($$$) { #{{{1
-	my ($nzb, $nfoParser, $imdbParser) = @_;
+    my ($nzb, $nfoParser, $imdbParser) = @_;
 
-	my $nfo = $nzb->{'nfo'};
-	return undef unless (defined $nfo);
+    my $nfo = $nzb->{'nfo'};
+    return undef unless (defined $nfo);
 
-	my $imdb_id = $nfoParser->parse_imdb_nr($nfo);
-	return undef unless (defined $imdb_id);
+    my $imdb_id = $nfoParser->parse_imdb_nr($nfo);
+    return undef unless (defined $imdb_id);
 
-	return $imdbParser->extract_imdb_data($imdb_id);
+    return $imdbParser->extract_imdb_data($imdb_id);
 } #}}}1
 sub isMovieAcceptable($$$) { #{{{1
-	my ($movie, $genre_ratings, $minimum_rating) = @_;
+    my ($movie, $genre_ratings, $minimum_rating) = @_;
 
-	# there must be at least 500 voters before we consider the rating at all
-	my $raters = $movie->{'raters'};
-	return 0 if ((!defined $raters) or ($raters < 500));
+    # there must be at least 500 voters before we consider the rating at all
+    my $raters = $movie->{'raters'};
+    return 0 if ((!defined $raters) or ($raters < 500));
 
-	my $rating = $movie->{'rating'};
-	for my $genre (@{$movie->{'genres'}}) {
-		my $genre_rating = $genre_ratings->{lc($genre)};
-		if (defined $genre_rating) {
-			return 1 if ($rating >= $genre_rating);
-		}
-	}
-	return ($rating >= $minimum_rating);
+    my $rating = $movie->{'rating'};
+    for my $genre (@{$movie->{'genres'}}) {
+        my $genre_rating = $genre_ratings->{lc($genre)};
+        if (defined $genre_rating) {
+            return 1 if ($rating >= $genre_rating);
+        }
+    }
+    return ($rating >= $minimum_rating);
 } #}}}1
 sub isExpectedMovie($$) { #{{{1
-	my ($title, $expected) = @_;
+    my ($title, $expected) = @_;
 
-	$title = lc($title);
-	$title =~ s/[^\w\d]//g;
+    $title = lc($title);
+    $title =~ s/[^\w\d]//g;
 
-	$expected = lc($expected);
-	$expected =~ s/[^\w\d]//g;
+    $expected = lc($expected);
+    $expected =~ s/[^\w\d]//g;
 
-	return ($title eq $expected);
+    return ($title eq $expected);
 } #}}}1
 sub parseCMDL { # {{{1
-	my $config = $ENV{HOME} . '/.nzb-util/nzb-collect';
+    my $config = $ENV{HOME} . '/.nzb-util/nzb-collect';
 
-	my $help=0;
-	my $nonotify=0;
-	my $nzbage;
-	my $nzbdir;
-	my $output;
-	my $speed;
+    my $help=0;
+    my $nonotify=0;
+    my $nzbage;
+    my $nzbdir;
+    my $output;
+    my $speed;
 
 
-	my $result = GetOptions(
-		"config=s"  => \$config,
-		"dir=s"     => \$nzbdir,
-		"help!"     => \$help,
-		"nonotify!" => \$nonotify,
-		"output=s"  => \$output,
-		"speed=i"   => \$speed,
-	);
+    my $result = GetOptions(
+        "config=s"  => \$config,
+        "dir=s"     => \$nzbdir,
+        "help!"     => \$help,
+        "nonotify!" => \$nonotify,
+        "output=s"  => \$output,
+        "speed=i"   => \$speed,
+    );
 
-	if ($help) {
-		print $0 . ': <OPTIONS>' . "\n";
-		print "    --config:   filename of the configuration-file to read.\n";
-		print "    --dir:      diretory to output the nzb files to.\n";
-		print "    --help:     print this help.\n";
-		print "    --nonotify: diable notifications.\n";
-		print "    --output:   write progress and messages to this file (default: STDOUT).\n";
-		print "    --speed:    limit download spead to this (kb/s).\n";
-		exit 0;
-	}
+    if ($help) {
+        print $0 . ': <OPTIONS>' . "\n";
+        print "    --config:   filename of the configuration-file to read.\n";
+        print "    --dir:      diretory to output the nzb files to.\n";
+        print "    --help:     print this help.\n";
+        print "    --nonotify: diable notifications.\n";
+        print "    --output:   write progress and messages to this file (default: STDOUT).\n";
+        print "    --speed:    limit download spead to this (kb/s).\n";
+        exit 0;
+    }
 
-	my %CFG;
-	# read in $config file
-	open(FILE, $config) or die "could not open $config: $!";
-	my $content; { local $/ = undef; $content = <FILE> }
-	close(FILE);
-	eval $content or die "could not slurp in $config: $!";
+    my %CFG;
+    # read in $config file
+    open(FILE, $config) or die "could not open $config: $!";
+    my $content; { local $/ = undef; $content = <FILE> }
+    close(FILE);
+    eval $content or die "could not slurp in $config: $!";
 
-	# overriding config values by commandline values (won't be saved)
-	if (defined $nzbdir)  { $CFG{'nzbdir'}   = $nzbdir; }
-	if (defined $speed)   { $CFG{'speed'}    = $speed;  }
-	if (defined $output)  {
-		open(OUTPUT, ">", $output) or die "could not open $output: $!";
-		$CFG{'output'} = *OUTPUT;
-	} else {
-		$CFG{'output'} = *STDOUT;
-	}
+    # overriding config values by commandline values (won't be saved)
+    if (defined $nzbdir)  { $CFG{'nzbdir'}   = $nzbdir; }
+    if (defined $speed)   { $CFG{'speed'}    = $speed;  }
+    if (defined $output)  {
+        open(OUTPUT, ">", $output) or die "could not open $output: $!";
+        $CFG{'output'} = *OUTPUT;
+    } else {
+        $CFG{'output'} = *STDOUT;
+    }
 
-	$CFG{'notify_enabled'} = not $nonotify;
+    $CFG{'notify_enabled'} = not $nonotify;
 
-	return \%CFG;
+    return \%CFG;
 } # }}}1
 sub processNotifications() { #{{{1
-	my $from = $CFG->{'sender'};
+    my $from = $CFG->{'sender'};
 
-	return unless $WRITER->hasMessages();
-	$WRITER->write("\n", undef);
+    return unless $WRITER->hasMessages();
+    $WRITER->write("\n", undef);
 
-	for my $serie (@{$CFG->{'series'}}) {
-		my $serieID = $serie->{'id'};
-		my $message = $WRITER->getMessageForBox($serieID);
-		if ($message) {
-			my $title = $serie->{'name'};
-			
-			my $prefix = "Hi\n\nHave you seen, that the new episodes of $title have aired in the US? Can't wait to view them on TV.\n\n";
-			my $suffix = "\ncu\n\tAlex\n";
-			sendMails($serieID, '[Notify] ' . $title, $prefix . $message . $suffix);
-		}
-	}
+    for my $serie (@{$CFG->{'series'}}) {
+        my $serieID = $serie->{'id'};
+        my $message = $WRITER->getMessageForBox($serieID);
+        if ($message) {
+            my $title = $serie->{'name'};
+            
+            my $prefix = "Hi\n\nHave you seen, that the new episodes of $title have aired in the US? Can't wait to view them on TV.\n\n";
+            my $suffix = "\ncu\n\tAlex\n";
+            sendMails($serieID, '[Notify] ' . $title, $prefix . $message . $suffix);
+        }
+    }
 
-	my $message = $WRITER->getMessageForBox('movies');
-	if ($message) {
-		my $prefix = "Hi\n\nDo you know the following movie(s)? The rating on IMDB looks very promising:\n\n";
-		my $suffix = "\nI'll keep you posted if I find other interesing movies.\n\ncu\n\tAlex\n";
-		sendMails('movies', '[Notify] movies', $prefix . $message . $suffix);
-	}
+    my $message = $WRITER->getMessageForBox('movies');
+    if ($message) {
+        my $prefix = "Hi\n\nDo you know the following movie(s)? The rating on IMDB looks very promising:\n\n";
+        my $suffix = "\nI'll keep you posted if I find other interesing movies.\n\ncu\n\tAlex\n";
+        sendMails('movies', '[Notify] movies', $prefix . $message . $suffix);
+    }
 } #}}}1
 sub sendMails($$$) { #{{{1
-	my ($id, $subject, $message) = @_;
+    my ($id, $subject, $message) = @_;
 
-	my $notify = $CFG->{'notify'};
-	for my $reciever (@{$notify->{$id}}) {
-		my %mail = (From => $CFG->{'sender'}, To => $reciever, Subject => $subject, Message => $message);
-		unless (sendmail(%mail)) {
-			 $LOGGER->error('Could not send mail: ' . $Mail::Sendmail::error);
-			 next;
-		}
-		$LOGGER->debug($Mail::Sendmail::log);
-		$WRITER->write('Mail for ' . $id . ' sent to "' . $reciever . '".' . "\n", undef);
-	}
+    my $notify = $CFG->{'notify'};
+    for my $reciever (@{$notify->{$id}}) {
+        my %mail = (From => $CFG->{'sender'}, To => $reciever, Subject => $subject, Message => $message);
+        unless (sendmail(%mail)) {
+             $LOGGER->error('Could not send mail: ' . $Mail::Sendmail::error);
+             next;
+        }
+        $LOGGER->debug($Mail::Sendmail::log);
+        $WRITER->write('Mail for ' . $id . ' sent to "' . $reciever . '".' . "\n", undef);
+    }
 }#}}}1
 sub validateNotificationSubscriptions() { #{{{1
-	my $sIds = ();
-	for my $serie (@{$CFG->{'series'}}) {
-		my $id = $serie->{'id'};
-		$sIds->{$id} = 1;
-	}
+    my $sIds = ();
+    for my $serie (@{$CFG->{'series'}}) {
+        my $id = $serie->{'id'};
+        $sIds->{$id} = 1;
+    }
 
-	my $listPossibleSubscriptins = 0;
-	my $notify = $CFG->{'notify'};
-	for my $entry (sort keys %$notify) {
-		next if ($entry eq 'movies');
-		next if ($sIds->{$entry});
-		$LOGGER->warn('subscription for ' . $entry . ' is not collected.');
-		$listPossibleSubscriptins = 1;
-	}
+    my $listPossibleSubscriptins = 0;
+    my $notify = $CFG->{'notify'};
+    for my $entry (sort keys %$notify) {
+        next if ($entry eq 'movies');
+        next if ($sIds->{$entry});
+        $LOGGER->warn('subscription for ' . $entry . ' is not collected.');
+        $listPossibleSubscriptins = 1;
+    }
 
-	if ($listPossibleSubscriptins) {
-		my $seriesSubscriptions = join(', ', sort { $a <=> $b } keys %$sIds);
-		$LOGGER->warn('possible subscriptions are: movies, ' . $seriesSubscriptions);
-	}
+    if ($listPossibleSubscriptins) {
+        my $seriesSubscriptions = join(', ', sort { $a <=> $b } keys %$sIds);
+        $LOGGER->warn('possible subscriptions are: movies, ' . $seriesSubscriptions);
+    }
 } #}}}1
 
 validateNotificationSubscriptions();
 
 if ($CFG->{'series_search_enabled'}) {
-	$LOGGER->debug('searching for series');
-	crawl_series();
+    $LOGGER->debug('searching for series');
+    crawl_series();
 }
 
 if ($CFG->{'movies_search_enabled'}) {
-	foreach my $query ('brrip', 'dvdrip') {
-		$LOGGER->debug('searching for movies (' . $query . ')');
-		crawl_movies($query);
-	}
+    foreach my $query ('brrip', 'dvdrip') {
+        $LOGGER->debug('searching for movies (' . $query . ')');
+        crawl_movies($query);
+    }
 }
 
 cleanup(${CFG}->{'nzbdir'} . '/movie', $CFG->{'movies_search_weeks'});
 cleanup(${CFG}->{'nzbdir'} . '/serie', $CFG->{'series_search_weeks'});
 
 if ($CFG->{'notify_enabled'}) {
-	processNotifications();
+    processNotifications();
 }

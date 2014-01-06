@@ -16,104 +16,104 @@ use WWW::Mechanize::GZip;
 my $LOGGER = Log::Log4perl->get_logger();
 
 sub new {
-	my $class  = shift;
-	my %params = @_;
+    my $class  = shift;
+    my %params = @_;
 
-	my $www = WWW::Mechanize::GZip->new(autocheck => 1, ssl_opts => { verify_hostname => 0 });
-	$www->agent_alias('Windows IE 6');
-	$www->conn_cache(LWP::ConnCache->new);
-	$www->credentials('nntpi', 'an1Knip4cogikFav6');
-	$www->default_header('Accept-Language' => 'en');
+    my $www = WWW::Mechanize::GZip->new(autocheck => 1, ssl_opts => { verify_hostname => 0 });
+    $www->agent_alias('Windows IE 6');
+    $www->conn_cache(LWP::ConnCache->new);
+    $www->credentials('nntpi', 'an1Knip4cogikFav6');
+    $www->default_header('Accept-Language' => 'en');
 
-	my $self = {
-		base => 'https://nntpi.shadowhunt.de:8443/api?apikey=3f7929559f2e198e8f0f03f9cac5198e',
-		www  => $www,
-	};
+    my $self = {
+        base => 'https://nntpi.shadowhunt.de:8443/api?apikey=3f7929559f2e198e8f0f03f9cac5198e',
+        www  => $www,
+    };
 
-	bless $self, $class;
-	return $self;
+    bless $self, $class;
+    return $self;
 }
 
 sub downloadNZB($$$) { #{{{1
-	my ($self, $nzb, $file) = @_;
+    my ($self, $nzb, $file) = @_;
 
-	my $url = $self->{'base'} . '&t=get&id=' . $nzb->{'id'};
-	$LOGGER->debug('url: ' . $url);
+    my $url = $self->{'base'} . '&t=get&id=' . $nzb->{'id'};
+    $LOGGER->debug('url: ' . $url);
 
-	my $www = $self->{'www'};
-	mkpath(dirname($file));
-	$www->get($url);
-	unless ($www->success) {
-		$LOGGER->error('Can\'t retrieve ' . $url . ': ' . $!);
-	}
+    my $www = $self->{'www'};
+    mkpath(dirname($file));
+    $www->get($url);
+    unless ($www->success) {
+        $LOGGER->error('Can\'t retrieve ' . $url . ': ' . $!);
+    }
 
-	open (FH, ">$file");
-	print FH $www->response->content();
-	close (FH);
+    open (FH, ">$file");
+    print FH $www->response->content();
+    close (FH);
 } #}}}1
 sub searchNZB($$) { #{{{1
-	my ($self, $url) = @_;
-	$LOGGER->debug('url: ' . $url);
+    my ($self, $url) = @_;
+    $LOGGER->debug('url: ' . $url);
 
-	my @nzbs;
+    my @nzbs;
 
-	my $www = $self->{'www'};
-	$www->get($url);
-	unless ($www->success) {
-		$LOGGER->error('Can\'t retrieve ' . $url . ': ' . $!);
-		return undef;
-	}
+    my $www = $self->{'www'};
+    $www->get($url);
+    unless ($www->success) {
+        $LOGGER->error('Can\'t retrieve ' . $url . ': ' . $!);
+        return undef;
+    }
 
-	my $data = $www->content;
-	my $decoded_json = decode_json($data);
+    my $data = $www->content;
+    my $decoded_json = decode_json($data);
 
-	foreach my $j ( @$decoded_json ) {
-		my $nfo = 0;
-		$nfo = 1 if (defined $j->{'nfoID'});
+    foreach my $j ( @$decoded_json ) {
+        my $nfo = 0;
+        $nfo = 1 if (defined $j->{'nfoID'});
 
-		next if ($j->{'completion'} < 100);
-		my $nzb = { id => $j->{'guid'}, subject => $j->{'name'}, size => $j->{'size'}, password => 0, nfo => $nfo, poster => $j->{'fromname'} };
-		push (@nzbs, $nzb);
-	}
+        next if ($j->{'completion'} < 100);
+        my $nzb = { id => $j->{'guid'}, subject => $j->{'name'}, size => $j->{'size'}, password => 0, nfo => $nfo, poster => $j->{'fromname'} };
+        push (@nzbs, $nzb);
+    }
 
-	@nzbs= sort { $a->{'id'} cmp $b->{'id'}; } @nzbs;
-	return \@nzbs;
+    @nzbs= sort { $a->{'id'} cmp $b->{'id'}; } @nzbs;
+    return \@nzbs;
 } #}}}1
 sub searchNZBQuery($$$$$) { #{{{1
-	my ($self, $query, $min_size, $max_size, $age) = @_;
-	$query =~ s/\W+/%20/g;
+    my ($self, $query, $min_size, $max_size, $age) = @_;
+    $query =~ s/\W+/%20/g;
 
-	my $url = $self->{'base'} . '&o=json&t=search' .
-	          '&q=' . $query .
-		  '&maxage=' . $age;
+    my $url = $self->{'base'} . '&o=json&t=search' .
+    '&q=' . $query .
+    '&maxage=' . $age;
 
-	my @filtered;
-	my $nzbs = $self->searchNZB($url);
-	for my $nzb ( @$nzbs ) {
-		my $size = $nzb->{'size'};
-		if ($size >= $min_size and $size <= $max_size) {
-			push(@filtered, $nzb);
-		}
-	}
-	return \@filtered;
-} #}}}1 
+    my @filtered;
+    my $nzbs = $self->searchNZB($url);
+    for my $nzb ( @$nzbs ) {
+        my $size = $nzb->{'size'};
+        if ($size >= $min_size and $size <= $max_size) {
+            push(@filtered, $nzb);
+        }
+    }
+    return \@filtered;
+} #}}}1
 sub searchNZBSerie($$$$$) { #{{{1
-	my ($self, $serie, $season, $episode, $hd, $age) = @_;
+    my ($self, $serie, $season, $episode, $hd, $age) = @_;
 
-	my $name = $serie->{'name'};
-	$name =~ s/\W+/%20/g;
+    my $name = $serie->{'name'};
+    $name =~ s/\W+/%20/g;
 
-	my $url = $self->{'base'} . '&o=json&t=tvsearch&q=' . $name .
-	          '&season=' . $season .
-	          '&ep=' . $episode .
-		  '&maxage=' . $age;
-	if ($hd) {
-		$url .= '&cat=5040';
-	} else {
-		$url .= '&cat=5030';
-	}
+    my $url = $self->{'base'} . '&o=json&t=tvsearch&q=' . $name .
+    '&season=' . $season .
+    '&ep=' . $episode .
+    '&maxage=' . $age;
+    if ($hd) {
+        $url .= '&cat=5040';
+    } else {
+        $url .= '&cat=5030';
+    }
 
-	return $self->searchNZB($url);
+    return $self->searchNZB($url);
 } #}}}1
 
 1;

@@ -5,6 +5,7 @@ package NZB;
 use strict;
 use warnings FATAL => 'all';
 
+use DateTime;
 use Getopt::Long;
 use Log::Log4perl;
 use NZB::EpisodeGuides;
@@ -14,11 +15,11 @@ use NZB::Message;
 my $system_logConfig = '/etc/nzb-util/log4perl.conf';
 my $user_logConfig   = $ENV{HOME} . '/.nzb-util/log4perl.conf';
 if (-f $user_logConfig) {
-	Log::Log4perl::init($user_logConfig);
+    Log::Log4perl::init($user_logConfig);
 } elsif (-f $system_logConfig) {
-	Log::Log4perl::init($system_logConfig);
+    Log::Log4perl::init($system_logConfig);
 } else {
-	Log::Log4perl::init();
+    Log::Log4perl::init();
 }
 
 
@@ -26,58 +27,63 @@ my $CFG    = parseCMDL();
 my $WRITER = NZB::Message->new(output => $CFG->{'output'});
 
 sub parseCMDL { # {{{1
-	my $config = $ENV{HOME} . '/.nzb-util/epguide.conf';
+    my $config = $ENV{HOME} . '/.nzb-util/epguide.conf';
 
-	my $help=0;
-	my $output;
+    my $help=0;
+    my $output;
 
 
-	my $result = GetOptions(
-		"config=s"  => \$config,
-		"help!"     => \$help,
-		"output=s"  => \$output,
-	);
+    my $result = GetOptions(
+        "config=s"  => \$config,
+        "help!"     => \$help,
+        "output=s"  => \$output,
+    );
 
-	if ($help) {
-		print $0 . ': <OPTIONS>' . "\n";
-		print "    --config:   filename of the configuration-file to read.\n";
-		print "    --help:     print this help.\n";
-		print "    --output:   write progress and messages to this file (default: STDOUT).\n";
-		exit 0;
-	}
+    if ($help) {
+        print $0 . ': <OPTIONS>' . "\n";
+        print "    --config:   filename of the configuration-file to read.\n";
+        print "    --help:     print this help.\n";
+        print "    --output:   write progress and messages to this file (default: STDOUT).\n";
+        exit 0;
+    }
 
-	my %CFG;
-	# read in $config file
-	open(FILE, $config) or die "could not open $config: $!";
-	my $content; { local $/ = undef; $content = <FILE> }
-	close(FILE);
-	eval $content or die "could not slurp in $config: $!";
+    my %CFG;
+    # read in $config file
+    open(FILE, $config) or die "could not open $config: $!";
+    my $content; { local $/ = undef; $content = <FILE> }
+    close(FILE);
+    eval $content or die "could not slurp in $config: $!";
 
-	# overriding config values by commandline values (won't be saved)
-	if (defined $output)  {
-		open(OUTPUT, ">", $output) or die "could not open $output: $!";
-		$CFG{'output'} = *OUTPUT;
-	} else {
-		$CFG{'output'} = *STDOUT;
-	}
+    # overriding config values by commandline values (won't be saved)
+    if (defined $output)  {
+        open(OUTPUT, ">", $output) or die "could not open $output: $!";
+        $CFG{'output'} = *OUTPUT;
+    } else {
+        $CFG{'output'} = *STDOUT;
+    }
 
-	return \%CFG;
+    return \%CFG;
 } # }}}1
 
 my $epGuides  = NZB::EpisodeGuides->new();
 
 my $prefix = $CFG->{'prefix'};
 my $suffix = $CFG->{'suffix'};
+my $today  = DateTime->now->ymd;
 
 for my $serie (@{$CFG->{'series'}}) {
-	my $serieID = $serie->{'id'};
-	my $name = $serie->{'name'};
-	my $searchName = $name;
-	$searchName =~ s/\W+/./g;
+    my $serieID = $serie->{'id'};
+    my $name = $serie->{'name'};
+    my $searchName = $name;
+    $searchName =~ s/\W+/./g;
 
-	my $episodes = $epGuides->getAllEpisodes($serieID);
-	for my $episode (@$episodes) {
-		my $eid = $episode->{'id'};
-		$WRITER->write($episode->{'date'} . ': ' . $name . ' [' . $eid . '] "' . $prefix . $searchName . '+' . uc($eid) . $suffix . "\"\n", $serieID);
-	}
+    my $episodes = $epGuides->getAllEpisodes($serieID);
+    for my $episode (@$episodes) {
+        my $eid     = $episode->{'id'};
+        my $airDate = $episode->{'date'};
+
+        if ($today ne $airDate) {
+            $WRITER->write($airDate . ': ' . $name . ' [' . $eid . '] "' . $prefix . $searchName . '+' . uc($eid) . $suffix . "\"\n", $serieID);
+        }
+    }
 }
