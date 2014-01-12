@@ -82,7 +82,7 @@ for my $serie (@{$CFG->{'series'}}) {
         my $eid     = $episode->{'id'};
         my $airDate = $episode->{'date'};
 
-        if ($today ne $airDate) {
+        if (($airDate cmp $today) < 0) {
             $WRITER->write($airDate . ': ' . $name . ' [' . $eid . '] "' . $prefix . $searchName . '+' . uc($eid) . $suffix . "\"\n", $serieID);
         }
     }
