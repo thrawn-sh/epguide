@@ -67,15 +67,16 @@ sub parseCMDL { # {{{1
 
 my $epGuides  = NZB::EpisodeGuides->new();
 
-my $prefix = $CFG->{'prefix'};
-my $suffix = $CFG->{'suffix'};
-my $today  = DateTime->now->ymd;
+my $prefix   = $CFG->{'prefix'};
+my $suffix   = $CFG->{'suffix'};
+my $separtor = $CFG->{'separator'};
+my $today    = DateTime->now->ymd;
 
 for my $serie (@{$CFG->{'series'}}) {
     my $serieID = $serie->{'id'};
     my $name = $serie->{'name'};
     my $searchName = $name;
-    $searchName =~ s/\W+/./g;
+    $searchName =~ s/\W+/$separtor/g;
 
     my $episodes = $epGuides->getAllEpisodes($serieID);
     for my $episode (@$episodes) {
