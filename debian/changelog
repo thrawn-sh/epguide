@@ -1,3 +1,9 @@
+nzb-util (2015.0312) stable; urgency=medium
+
+  * make separator replacement char configurable
+
+ -- Shadowhunt Package <package@shadowhunt.de>  Thu, 12 Mar 2015 16:14:21 +0100
+
 nzb-util (2013.1113) stable; urgency=low
 
   * rebuild nzb-notify to epguide-notify
