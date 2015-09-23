@@ -1,3 +1,9 @@
+epguide-util (2015.0923) stable; urgency=medium
+
+  * massive cleanup
+
+ -- Shadowhunt Package <package@shadowhunt.de>  Wed, 23 Sep 2015 06:02:36 +0200
+
 epguide-util (2015.0312) stable; urgency=medium
 
   * make separator replacement char configurable
