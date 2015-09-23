@@ -1,72 +1,72 @@
-nzb-util (2015.0312) stable; urgency=medium
+epguide-util (2015.0312) stable; urgency=medium
 
   * make separator replacement char configurable
 
  -- Shadowhunt Package <package@shadowhunt.de>  Thu, 12 Mar 2015 16:14:21 +0100
 
-nzb-util (2013.1113) stable; urgency=low
+epguide-util (2013.1113) stable; urgency=low
 
   * rebuild nzb-notify to epguide-notify
 
  -- Shadowhunt Package <package@shadowhunt.de>  Wed, 13 Nov 2013 22:25:04 +0100
 
-nzb-util (2013.0512) stable; urgency=low
+epguide-util (2013.0512) stable; urgency=low
 
   * added nzb-notify
 
  -- Shadowhunt Package <package@shadowhunt.de>  Sun, 12 May 2013 18:58:43 +0200
 
-nzb-util (2013.0314) stable; urgency=low
+epguide-util (2013.0314) stable; urgency=low
 
   * switch to new index server
 
  -- Shadowhunt Package <package@shadowhunt.de>  Thu, 14 Mar 2013 15:00:38 +0100
 
-nzb-util (2012.0904) stable; urgency=low
+epguide-util (2012.0904) stable; urgency=low
 
   * only store complete records to imdb db
 
  -- Shadowhunt Package <package@shadowhunt.de>  Tue, 04 Sep 2012 22:14:12 +0200
 
-nzb-util (2012.0831) stable; urgency=low
+epguide-util (2012.0831) stable; urgency=low
 
   * number of raters can be undefined, handle gracefully
 
  -- Shadowhunt Package <package@shadowhunt.de>  Fri, 31 Aug 2012 11:04:14 +0200
 
-nzb-util (2012.0822) stable; urgency=low
+epguide-util (2012.0822) stable; urgency=low
 
   * minor bugfixes
 
  -- Shadowhunt Package <package@shadowhunt.de>  Wed, 22 Aug 2012 19:06:54 +0200
 
-nzb-util (2012.0503) stable; urgency=low
+epguide-util (2012.0503) stable; urgency=low
 
   * recompile for stable
 
  -- Shadowhunt Package <package@shadowhunt.de>  Thu, 03 May 2012 14:42:10 +0200
 
-nzb-util (2012.0324) stable; urgency=low
+epguide-util (2012.0324) stable; urgency=low
 
   * always use locking operations when accessing caches
   * added more debug statements
 
  -- Shadowhunt Package <package@shadowhunt.de>  Sat, 24 Mar 2012 11:04:39 +0100
 
-nzb-util (2012.0228) stable; urgency=low
+epguide-util (2012.0228) stable; urgency=low
 
   * handle missing/incomplete csv data more graceful
 
  -- Shadowhunt Package <package@shadowhunt.de>  Fri, 28 Feb 2012 00:16:17 +0100
 
-nzb-util (2012.0224) stable; urgency=low
+epguide-util (2012.0224) stable; urgency=low
 
   * added --nonotify cmdl switch
   * restructure nzbdir folder
 
  -- Shadowhunt Package <package@shadowhunt.de>  Fri, 24 Feb 2012 10:36:03 +0100
 
-nzb-util (2012.0215) stable; urgency=low
+epguide-util (2012.0215) stable; urgency=low
 
   * Added debugging to the IMDB module
   * Bugfix IMDB genres are now retrieved again
@@ -74,7 +74,7 @@ nzb-util (2012.0215) stable; urgency=low
 
  -- Shadowhunt Package <package@shadowhunt.de>  Wed, 15 Feb 2012 14:42:25 +0100
 
-nzb-util (2012.0203) stable; urgency=low
+epguide-util (2012.0203) stable; urgency=low
 
   * Added global default log4perl file and system logging folder
   * Added nzbget wrapper
@@ -82,7 +82,7 @@ nzb-util (2012.0203) stable; urgency=low
 
  -- Shadowhunt Package <package@shadowhunt.de>  Fri, 03 Feb 2012 16:50:35 +0100
 
-nzb-util (2011.0202) stable; urgency=low
+epguide-util (2011.0202) stable; urgency=low
 
   * Initial Release.
 

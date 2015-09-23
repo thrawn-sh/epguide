@@ -2,5 +2,7 @@
 \.gitignore
 .+\.tar\.gz
 Makefile
+create_changelog.sh
 debian
-nzb-collect_dev.sh
+epguide-notify_dev.sh
+package.sh

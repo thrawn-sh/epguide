@@ -40,7 +40,7 @@ sub getAllEpisodes($$$) { #{{{1
     my $first = Date_to_Time(Add_Delta_Days(Today(), -90), 0, 0, 0);
 
     my $url = 'http://epguides.com/common/exportToCSV.asp?rage=' . $serieID;
-    $LOGGER->debug('url: ' . $url);
+    $LOGGER->info('url: ' . $url);
 
     my $www = $self->{'www'};
     $www->get($url);
@@ -63,22 +63,22 @@ sub getAllEpisodes($$$) { #{{{1
         my $released = $fields[4];
 
         unless($season) {
-            $LOGGER->info('Missing season : => skipping');
+            $LOGGER->info('Missing season : => skipping' . $line);
             next;
         }
         unless($episode) {
-            $LOGGER->info('Missing episode : => skipping');
+            $LOGGER->info('Missing episode : => skipping' . $line);
             next;
         }
         unless($released) {
-            $LOGGER->info('Missing release date : => skipping');
+            $LOGGER->info('Missing release date : => skipping' . $line);
             next;
         }
         $released =~ s# #/#g;
 
         my @dateparts = split(/\//,$released);
         unless (scalar(@dateparts) == 3) {
-            $LOGGER->info('Incomplete release date : ' . $released . ' => skipping');
+            $LOGGER->info('Incomplete release date : ' . $released . ' => skipping' . $line);
             next;
         }
 

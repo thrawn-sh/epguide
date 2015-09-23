@@ -12,7 +12,6 @@ use EpisodeGuide::EpisodeGuides;
 use EpisodeGuide::Message;
 
 # Configuration log4perl
-my $system_logConfig = '/etc/nzb-util/log4perl.conf';
 my $user_logConfig   = $ENV{HOME} . '/.nzb-util/log4perl.conf';
 if (-f $user_logConfig) {
     Log::Log4perl::init($user_logConfig);
