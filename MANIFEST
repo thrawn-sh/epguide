@@ -2,5 +2,5 @@ MANIFEST
 MANIFEST.SKIP
 Makefile.PL
 bin/epguide-notify
-lib/NZB/EpisodeGuides.pm
-lib/NZB/Message.pm
+lib/EpisodeGuide/EpisodeGuides.pm
+lib/EpisodeGuide/Message.pm
