@@ -51,34 +51,33 @@ sub getAllEpisodes($$$) { #{{{1
 
     my $csv = Text::CSV->new({ binary => 1 });
 
-    my $line_counter = 0;
     for my $line (split("\n", $www->text())) {
-        $line_counter++;
-        next if ($line_counter <= 1);     # skip cvs header
+        next unless ($line =~ m/^\d/);
+        #print "line: " . $line . "\n";
         next unless ($csv->parse($line)); # could not parse line
 
-        my @fields = $csv->fields();
+        my @fields   = $csv->fields();
         my $season   = $fields[1];
         my $episode  = $fields[2];
         my $released = $fields[4];
 
         unless($season) {
-            $LOGGER->info('Missing season : => skipping' . $line);
+            $LOGGER->info('Missing season : => skipping (' . $line . ')');
             next;
         }
         unless($episode) {
-            $LOGGER->info('Missing episode : => skipping' . $line);
+            $LOGGER->info('Missing episode : => skipping (' . $line . ')');
             next;
         }
         unless($released) {
-            $LOGGER->info('Missing release date : => skipping' . $line);
+            $LOGGER->info('Missing release date : => skipping (' . $line . ')');
             next;
         }
         $released =~ s# #/#g;
 
         my @dateparts = split(/\//,$released);
         unless (scalar(@dateparts) == 3) {
-            $LOGGER->info('Incomplete release date : ' . $released . ' => skipping' . $line);
+            $LOGGER->info('Incomplete release date : ' . $released . ' => skipping (' . $line . ')');
             next;
         }
 

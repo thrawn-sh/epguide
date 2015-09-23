@@ -15,8 +15,6 @@ use EpisodeGuide::Message;
 my $user_logConfig   = $ENV{HOME} . '/.epguide-util/log4perl.conf';
 if (-f $user_logConfig) {
     Log::Log4perl::init($user_logConfig);
-} elsif (-f $system_logConfig) {
-    Log::Log4perl::init($system_logConfig);
 } else {
     Log::Log4perl::init();
 }
