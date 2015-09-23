@@ -12,7 +12,7 @@ use EpisodeGuide::EpisodeGuides;
 use EpisodeGuide::Message;
 
 # Configuration log4perl
-my $user_logConfig   = $ENV{HOME} . '/.nzb-util/log4perl.conf';
+my $user_logConfig   = $ENV{HOME} . '/.epguide-util/log4perl.conf';
 if (-f $user_logConfig) {
     Log::Log4perl::init($user_logConfig);
 } elsif (-f $system_logConfig) {
@@ -26,7 +26,7 @@ my $CFG    = parseCMDL();
 my $WRITER = EpisodeGuide::Message->new(output => $CFG->{'output'});
 
 sub parseCMDL { # {{{1
-    my $config = $ENV{HOME} . '/.nzb-util/epguide.conf';
+    my $config = $ENV{HOME} . '/.epguide-util/epguide.conf';
 
     my $help=0;
     my $output;
