@@ -1,16 +1,6 @@
 MANIFEST
 MANIFEST.SKIP
 Makefile.PL
-bin/nzb-collect
-bin/wrapper/nzbget
-etc/log4perl.conf.sample
-etc/nzb-collect.sample
-etc/nzbget.conf.sample
-lib/NZB/Binsearch.pm
-lib/NZB/Check.pm
+bin/epguide-notify
 lib/NZB/EpisodeGuides.pm
-lib/NZB/IMDB.pm
 lib/NZB/Message.pm
-lib/NZB/NFO.pm
-lib/NZB/NZB.pm
-lib/NZB/Util.pm

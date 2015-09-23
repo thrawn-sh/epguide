@@ -1,4 +1,4 @@
-Source: nzb-util
+Source: epguide-util
 Section: perl
 Priority: optional
 Maintainer: Shadowhunt Package <package@shadowhunt.de>
@@ -14,7 +14,7 @@ Build-Depends-Indep: perl,
  libxml-dom-perl
 Standards-Version: 3.9.2
 
-Package: nzb-util
+Package: epguide-util
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  libcrypt-ssleay-perl,
@@ -25,8 +25,6 @@ Depends: ${perl:Depends}, ${misc:Depends},
  libtext-csv-perl,
  libwww-mechanize-gzip-perl,
  libxml-dom-perl
-Recommends: nzbget
 Description: lightweight news tracker
- nzb-util is a lightweight binary news tracker, that uses various free
- online platforms to keep you informed about binary news.
+ epguid-util is a lightweight series release notifier.
  .

@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-package NZB;
+package EpisodeGuide;
 
 use strict;
 use warnings FATAL => 'all';
@@ -8,8 +8,8 @@ use warnings FATAL => 'all';
 use DateTime;
 use Getopt::Long;
 use Log::Log4perl;
-use NZB::EpisodeGuides;
-use NZB::Message;
+use EpisodeGuide::EpisodeGuides;
+use EpisodeGuide::Message;
 
 # Configuration log4perl
 my $system_logConfig = '/etc/nzb-util/log4perl.conf';
@@ -24,7 +24,7 @@ if (-f $user_logConfig) {
 
 
 my $CFG    = parseCMDL();
-my $WRITER = NZB::Message->new(output => $CFG->{'output'});
+my $WRITER = EpisodeGuide::Message->new(output => $CFG->{'output'});
 
 sub parseCMDL { # {{{1
     my $config = $ENV{HOME} . '/.nzb-util/epguide.conf';
@@ -65,7 +65,7 @@ sub parseCMDL { # {{{1
     return \%CFG;
 } # }}}1
 
-my $epGuides  = NZB::EpisodeGuides->new();
+my $epGuides  = EpisodeGuide::EpisodeGuides->new();
 
 my $prefix    = $CFG->{'prefix'};
 my $suffix    = $CFG->{'suffix'};
@@ -83,7 +83,7 @@ for my $serie (@{$CFG->{'series'}}) {
         my $eid     = $episode->{'id'};
         my $airDate = $episode->{'date'};
 
-        if (($airDate cmp $today) < 0) {
+        if (($airDate cmp $today) <= 0) {
             $WRITER->write($airDate . ': ' . $name . ' [' . $eid . '] "' . $prefix . $searchName . '+' . uc($eid) . $suffix . "\"\n", $serieID);
         }
     }

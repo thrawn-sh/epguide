@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-package NZB::Message;
+package EpisodeGuide::Message;
 
 use strict;
 use warnings FATAL => 'all';
