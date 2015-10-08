@@ -5,7 +5,7 @@ package EpisodeGuide::EpisodeGuides;
 use strict;
 use warnings FATAL => 'all';
 
-use Date::Calc qw( Add_Delta_Days Today Date_to_Time Time_to_Date);
+use Date::Calc qw( Add_Delta_Days Today Date_to_Time Time_to_Date This_Year);
 use Date::Format;
 use Date::Parse;
 use LWP::ConnCache;
@@ -38,6 +38,7 @@ sub getAllEpisodes($$$) { #{{{1
     my @episodes;
     my $today = Date_to_Time(Today(), 0, 0, 0);
     my $first = Date_to_Time(Add_Delta_Days(Today(), -90), 0, 0, 0);
+    my $year  = This_Year();
 
     my $url = 'http://epguides.com/common/exportToCSV.asp?rage=' . $serieID;
     $LOGGER->info('url: ' . $url);
@@ -49,12 +50,16 @@ sub getAllEpisodes($$$) { #{{{1
         return undef;
     }
 
-    my $csv = Text::CSV->new({ binary => 1 });
+    my $csv = Text::CSV->new({ binary => 1, allow_loose_quotes => 1 });
 
-    for my $line (split("\n", $www->text())) {
+    for my $line (split(/\r|\n/, $www->text())) {
+        chomp($line);
+
         next unless ($line =~ m/^\d/);
-        #print "line: " . $line . "\n";
-        next unless ($csv->parse($line)); # could not parse line
+        unless ($csv->parse($line)) {
+            $LOGGER->info('Could not parse line: => skipping (' . $line . ')' . $csv->error_diag() );
+            next;
+        }
 
         my @fields   = $csv->fields();
         my $season   = $fields[1];
@@ -75,7 +80,7 @@ sub getAllEpisodes($$$) { #{{{1
         }
         $released =~ s# #/#g;
 
-        my @dateparts = split(/\//,$released);
+        my @dateparts = split(/\/| /,$released);
         unless (scalar(@dateparts) == 3) {
             $LOGGER->info('Incomplete release date : ' . $released . ' => skipping (' . $line . ')');
             next;
@@ -83,9 +88,12 @@ sub getAllEpisodes($$$) { #{{{1
 
         if ($dateparts[2] < 100) {
             $dateparts[2] += 2000;
+            if ($dateparts[2] > $year) {
+                $dateparts[2] -= 100;
+            }
         }
         $released = join('/', @dateparts);
-        $released = str2time($released) + (24 * 60 * 60); # give the release one day time to propagate
+        $released = str2time($released);
 
         if (($released > $first) && ($released < $today)) {
             my $episodeID = sprintf("s%02de%02d", $season, $episode);
