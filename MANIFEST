@@ -3,4 +3,3 @@ MANIFEST.SKIP
 Makefile.PL
 bin/epguide-notify
 lib/EpisodeGuide/EpisodeGuides.pm
-lib/EpisodeGuide/Message.pm

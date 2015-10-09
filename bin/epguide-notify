@@ -9,7 +9,6 @@ use DateTime;
 use Getopt::Long;
 use Log::Log4perl;
 use EpisodeGuide::EpisodeGuides;
-use EpisodeGuide::Message;
 
 # Configuration log4perl
 my $user_logConfig   = $ENV{HOME} . '/.epguide-util/log4perl.conf';
@@ -21,26 +20,20 @@ if (-f $user_logConfig) {
 
 
 my $CFG    = parseCMDL();
-my $WRITER = EpisodeGuide::Message->new(output => $CFG->{'output'});
 
 sub parseCMDL { # {{{1
     my $config = $ENV{HOME} . '/.epguide-util/epguide.conf';
-
-    my $help=0;
-    my $output;
-
+    my $help   = 0;
 
     my $result = GetOptions(
         "config=s"  => \$config,
         "help!"     => \$help,
-        "output=s"  => \$output,
     );
 
     if ($help) {
         print $0 . ': <OPTIONS>' . "\n";
         print "    --config:   filename of the configuration-file to read.\n";
         print "    --help:     print this help.\n";
-        print "    --output:   write progress and messages to this file (default: STDOUT).\n";
         exit 0;
     }
 
@@ -50,14 +43,6 @@ sub parseCMDL { # {{{1
     my $content; { local $/ = undef; $content = <FILE> }
     close(FILE);
     eval $content or die "could not slurp in $config: $!";
-
-    # overriding config values by commandline values (won't be saved)
-    if (defined $output)  {
-        open(OUTPUT, ">", $output) or die "could not open $output: $!";
-        $CFG{'output'} = *OUTPUT;
-    } else {
-        $CFG{'output'} = *STDOUT;
-    }
 
     return \%CFG;
 } # }}}1
@@ -81,7 +66,7 @@ for my $serie (@{$CFG->{'series'}}) {
         my $airDate = $episode->{'date'};
 
         if (($airDate cmp $today) <= 0) {
-            $WRITER->write($airDate . ': ' . $name . ' [' . $eid . '] "' . $prefix . $searchName . '+' . uc($eid) . $suffix . "\"\n", $serieID);
+            print($airDate . ': ' . $name . ' [' . $eid . '] "' . $prefix . $searchName . '+' . uc($eid) . $suffix . "\"\n");
         }
     }
 }
