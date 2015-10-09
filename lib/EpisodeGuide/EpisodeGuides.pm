@@ -15,6 +15,12 @@ use WWW::Mechanize::GZip;
 
 my $LOGGER = Log::Log4perl->get_logger();
 
+sub  trim($) {
+    my ($string) = @_;
+    $string =~ s/^\s+|\s+$//g;
+    return $string;
+}
+
 sub new {
     my $class  = shift;
     my %params = @_;
@@ -40,6 +46,8 @@ sub getAllEpisodes($$$) { #{{{1
     my $first = Date_to_Time(Add_Delta_Days(Today(), -90), 0, 0, 0);
     my $year  = This_Year();
 
+    $LOGGER->info('time periode: ' . $first . ' -> ' . $today);
+
     my $url = 'http://epguides.com/common/exportToCSV.asp?rage=' . $serieID;
     $LOGGER->info('url: ' . $url);
 
@@ -53,9 +61,12 @@ sub getAllEpisodes($$$) { #{{{1
     my $csv = Text::CSV->new({ binary => 1, allow_loose_quotes => 1 });
 
     for my $line (split(/\r|\n/, $www->text())) {
-        chomp($line);
+        $line = trim($line);
 
-        next unless ($line =~ m/^\d/);
+        next if ($line eq ""); # empty
+        next if ($line eq "list output"); # document title
+        next if ($line eq "number,season,episode,production code,airdate,title,special?,tvrage"); # csv header
+
         unless ($csv->parse($line)) {
             $LOGGER->info('Could not parse line: => skipping (' . $line . ')' . $csv->error_diag() );
             next;
@@ -96,8 +107,10 @@ sub getAllEpisodes($$$) { #{{{1
         $released = str2time($released);
 
         if (($released > $first) && ($released < $today)) {
-            my $episodeID = sprintf("s%02de%02d", $season, $episode);
-            push(@episodes, { id => $episodeID, date => time2str('%Y-%m-%d', $released) });
+            my $episodeID   = sprintf("s%02de%02d", $season, $episode);
+            my $releaseDate = time2str('%Y-%m-%d', $released);
+            $LOGGER->info('found episode ' . $episodeID . ' released on ' . $releaseDate);
+            push(@episodes, { id => $episodeID, date => $releaseDate });
         }
     }
 

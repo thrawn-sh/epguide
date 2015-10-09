@@ -18,7 +18,7 @@ if (-f $user_logConfig) {
     Log::Log4perl::init();
 }
 
-
+my $LOGGER = Log::Log4perl->get_logger();
 my $CFG    = parseCMDL();
 
 sub parseCMDL { # {{{1
@@ -60,6 +60,7 @@ for my $serie (@{$CFG->{'series'}}) {
     my $searchName = $name;
     $searchName =~ s/\W+/$separator/g;
 
+    $LOGGER->info('Processing ' . $name . ' with id ' . $serieID);
     my $episodes = $epGuides->getAllEpisodes($serieID);
     for my $episode (@$episodes) {
         my $eid     = $episode->{'id'};
