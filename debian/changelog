@@ -1,3 +1,9 @@
+epguide-util (2015.1010) stable; urgency=medium
+
+  * more cleanup
+
+ -- Shadowhunt Package <package@shadowhunt.de>  Sat, 10 Oct 2015 10:54:28 +0200
+
 epguide-util (2015.0923) stable; urgency=medium
 
   * massive cleanup
