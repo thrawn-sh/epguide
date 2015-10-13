@@ -48,7 +48,7 @@ sub getAllEpisodes($$$) { #{{{1
 
     $LOGGER->info('time periode: ' . $first . ' -> ' . $today);
 
-    my $url = 'http://epguides.com/common/exportToCSV.asp?rage=' . $serieID;
+    my $url = 'http://epguides.com/common/exportToCSVmaze.asp?maze=' . $serieID;
     $LOGGER->info('url: ' . $url);
 
     my $www = $self->{'www'};
@@ -65,7 +65,7 @@ sub getAllEpisodes($$$) { #{{{1
 
         next if ($line eq ""); # empty
         next if ($line eq "list output"); # document title
-        next if ($line eq "number,season,episode,production code,airdate,title,special?,tvrage"); # csv header
+        next if ($line eq "number,season,episode,airdate,title,TVmaze link"); # csv header
 
         unless ($csv->parse($line)) {
             $LOGGER->info('Could not parse line: => skipping (' . $line . ')' . $csv->error_diag() );
@@ -75,7 +75,7 @@ sub getAllEpisodes($$$) { #{{{1
         my @fields   = $csv->fields();
         my $season   = $fields[1];
         my $episode  = $fields[2];
-        my $released = $fields[4];
+        my $released = $fields[3];
 
         unless($season) {
             $LOGGER->info('Missing season : => skipping (' . $line . ')');
@@ -103,6 +103,7 @@ sub getAllEpisodes($$$) { #{{{1
                 $dateparts[2] -= 100;
             }
         }
+
         $released = join('/', @dateparts);
         $released = str2time($released);
 
