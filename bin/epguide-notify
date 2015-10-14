@@ -66,7 +66,7 @@ for my $serie (@{$CFG->{'series'}}) {
         my $eid     = $episode->{'id'};
         my $airDate = $episode->{'date'};
 
-        if (($airDate cmp $today) <= 0) {
+        if (($airDate cmp $today) < 0) {
             print($airDate . ': ' . $name . ' [' . $eid . '] "' . $prefix . $searchName . '+' . uc($eid) . $suffix . "\"\n");
         }
     }
