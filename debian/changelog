@@ -1,3 +1,9 @@
+epguide-util (2017.0624) stable; urgency=medium
+
+  * fix dependencies
+
+ --  <thrawn@shadowhunt.de>  Sat, 24 Jun 2017 08:49:27 +0200
+
 epguide-util (2015.1010) stable; urgency=medium
 
   * more cleanup
