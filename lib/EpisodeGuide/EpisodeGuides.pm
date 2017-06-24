@@ -56,8 +56,10 @@ sub getAllEpisodes($$$) { #{{{1
         return undef;
     }
 
+    my $content = $www->content; #decoded_by_headers => 1);
+    $LOGGER->debug('content: ' . $content);
     my $json = JSON->new->allow_nonref;
-    my $data = $json->decode($www->content(decoded_by_headers => 1));
+    my $data = $json->decode($content);
     foreach my $entry (@$data) {
         my $season = $entry->{'season'};
         unless($season) {

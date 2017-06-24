@@ -5,9 +5,10 @@ Maintainer: Shadowhunt Package <package@shadowhunt.de>
 Build-Depends: debhelper (>= 8)
 Build-Depends-Indep: perl,
  libdate-calc-perl,
+ libdatetime-perl,
+ libjson-perl,
  liblog-log4perl-perl,
  libtext-csv-perl,
- libdatetime-perl,
  libwww-mechanize-gzip-perl,
  libwww-perl
 Standards-Version: 3.9.2
@@ -16,9 +17,10 @@ Package: epguide-util
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  libdate-calc-perl,
+ libdatetime-perl,
+ libjson-perl,
  liblog-log4perl-perl,
  libtext-csv-perl,
- libtimedate-perl,
  libwww-mechanize-gzip-perl,
  libwww-perl
 Description: lightweight news tracker
