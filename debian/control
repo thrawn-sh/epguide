@@ -7,7 +7,7 @@ Build-Depends-Indep: perl,
  libdate-calc-perl,
  liblog-log4perl-perl,
  libtext-csv-perl,
- libtimedate-perl,
+ libdatetime-perl,
  libwww-mechanize-gzip-perl,
  libwww-perl
 Standards-Version: 3.9.2
